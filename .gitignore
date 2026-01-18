@@ -16,3 +16,4 @@ node_modules/
 .stan/dist/
 .stan/system/facet.state.json
 .stan/system/.docs.meta.json
+.stan/imports/

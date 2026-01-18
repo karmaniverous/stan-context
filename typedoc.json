@@ -20,7 +20,7 @@
   "plugin": ["typedoc-plugin-mdn-links", "typedoc-plugin-replace-text"],
   "projectDocuments": ["./guides/env-vars.md", "./CHANGELOG.md"],
   "navigationLinks": {
-    "GitHub": "https://github.com/karmaniverous/stan-core"
+    "GitHub": "https://github.com/karmaniverous/stan-context"
   },
   "replaceText": {
     "replacements": [

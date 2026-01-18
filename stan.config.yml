@@ -2,7 +2,7 @@ stan-core:
   stanPath: .stan
   includes: []
   excludes:
-    - '*.local'
+    - "*.local"
     - assets
     - CHANGELOG.md
     - docs
@@ -10,8 +10,13 @@ stan-core:
     - package-lock.json
   imports:
     stan-cli:
-      - ../stan-cli/.stan/interop/stan-core/**
+      - ../stan-cli/.stan/interop/stan-context/**
+      - ../stan-cli/.stan/system/stan.requirements.md
       - ../stan-cli/guides/stan-assistant-guide.md
+    stan-core:
+      - ../stan-core/.stan/interop/stan-context/**
+      - ../stan-core/.stan/system/stan.requirements.md
+      - ../stan-core/guides/stan-assistant-guide.md
 stan-cli:
   scripts:
     typecheck: npm run typecheck
@@ -19,7 +24,10 @@ stan-cli:
     test: npm run test -- --no-color
     build:
       script: cross-env NO_COLOR=1 npm run build
-      warnPattern: (?:^loaded [\w.]+ with warnings$|^\(!\)\s+(?!Circular dependency).+) (?![\s\S]*outputToFilesystem option is defaulting to true) (?![\s\S]*\(!\)\s+Circular dependency[\s\S]*node_modules[\\/](?:zod)[\s\S]*)
+      warnPattern: (?:^loaded [\w.]+ with warnings$|^\(!\)\s+(?!Circular
+        dependency).+) (?![\s\S]*outputToFilesystem option is defaulting to
+        true) (?![\s\S]*\(!\)\s+Circular
+        dependency[\s\S]*node_modules[\\/](?:zod)[\s\S]*)
     docs: npm run docs -- --emit none
     knip: npm run knip
   cliDefaults:

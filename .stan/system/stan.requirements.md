@@ -1,58 +1,233 @@
 # STAN — Requirements (stan-context)
 
-This document defines the requirements for `@karmaniverous/stan-context`, a pure analysis provider that generates dependency graphs and structural metadata for STAN. It is consumed by `stan-core`.
+This document defines the durable requirements for `@karmaniverous/stan-context` (“stan-context”), the “Context Compiler” package.
 
----
+stan-context scans a repository and produces a deterministic, serializable dependency graph (“the Map”) for consumption by `stan-core`.
 
-## 1) Purpose and Scope
+## Vision & role
 
-Provide a language-aware dependency analysis engine.
-- **Input**: Repository root path.
-- **Output**: A deterministic Dependency Graph (nodes/edges) and Context Metadata (sizes/hashes).
-- **Goal**: Enable "Context Selection" (AI chooses what to read based on the map) rather than "Context Filtering".
+- Pure analysis engine: no `.stan/` persistence, archiving, patching, or CLI/TTY behavior.
+- Stateless: accepts file system access + config inputs; returns JSON data.
+- Provider-based: core orchestrates; language providers analyze.
 
-## 2) Graph Schema (The Map)
+## Architecture (core + providers)
 
-The graph must be a serializable JSON object.
+- Core (`src/core/`)
+  - Defines the canonical graph schema and normalization rules.
+  - Scans the Universe (repo file discovery and selection).
+  - Computes hashes/sizes and performs incremental invalidation.
+  - Delegates language analysis to providers and merges results.
+- Providers (`src/providers/`)
+  - Implement language-specific analysis and tunneling.
+  - Default provider: TypeScript/JavaScript provider using the TypeScript Compiler API.
+  - Provider contract: accepts a list of source NodeIds to analyze and returns nodes/edges to merge.
 
-### Nodes (Modules)
-Represent a single file.
-- **id**: Repo-relative path (POSIX).
-- **type**:
-  - `'source'`: Local source file.
-  - `'external'`: Resolved `node_modules` target (e.g., `node_modules/pkg/index.d.ts`).
-- **metadata**:
-  - `size`: File size in bytes (Critical for AI decision making).
-  - `hash`: SHA-256 content hash.
+## Data model (DependencyGraph)
 
-### Edges (Dependencies)
-Directional relationship (`Source -> Target`).
-- **kind**:
-  - `'runtime'`: Standard import/require.
-  - `'type'`: Type-only import or JSDoc reference.
-  - `'dynamic'`: Async `import()` or `require()`.
-- **resolution**:
-  - `'explicit'`: Direct file-to-file.
-  - `'implicit'`: Tunneled through a barrel/index.
+The output graph MUST be JSON-serializable and deterministic.
 
-## 3) Analysis Logic (TypeScript Provider)
+### NodeId
 
-- **Engine**: Use the TypeScript Compiler API (not a bundler) to ensure source-truth fidelity.
-- **Scope**: Handle `.ts`, `.tsx`, `.js`, `.jsx`, `.d.ts`.
-- **Barrel Tunneling**:
-  - Detect imports from barrel files (`index.ts`).
-  - Resolve the "Physical" target (the actual implementation file) to allow granular selection.
-- **External Resolution**:
-  - **Shallow**: Resolve imports into `node_modules` only to the entry point file (usually `.d.ts` or `.js`). Do NOT analyze the internal graph of external packages.
-  - **Granularity**: File-level.
+`NodeId` is a string with these canonical forms:
 
-## 4) Incrementalism
+- Source file: POSIX repo-relative path (e.g., `src/index.ts`).
+- External file: POSIX repo-relative path under repo root when possible (e.g., `node_modules/.pnpm/pkg@1.2.3/node_modules/pkg/index.d.ts`).
+- Outside-root resolved file: POSIX-normalized absolute path (e.g., `C:/Users/me/dev/lib/index.d.ts`).
+- Builtin module: `node:<name>` (e.g., `node:fs`).
+- Missing/unresolved module: the import specifier (e.g., `./missing-file`).
 
-- The provider must accept a "Previous Graph" and a set of "Changed Files".
-- Re-analyze only changed files and their dependents.
-- Return the cached graph if no material changes occurred.
+### Graph shape
 
-## 5) Artifacts
+```ts
+export type NodeId = string;
 
-- **Core Graph**: Compact, committed to git (for PR reviews).
-- **Context Meta**: A generated schema for `.stan/system/context.meta.json` (the selection state file), though `stan-core` manages the I/O.
+export type GraphNodeKind = 'source' | 'external' | 'builtin' | 'missing';
+export type GraphLanguage = 'ts' | 'js' | 'json' | 'md' | 'other';
+
+export type GraphNodeMetadata = {
+  size?: number;
+  hash?: string;
+  isOutsideRoot?: true;
+};
+
+export type GraphNode = {
+  id: NodeId;
+  kind: GraphNodeKind;
+  language: GraphLanguage;
+  metadata?: GraphNodeMetadata;
+};
+
+export type GraphEdgeKind = 'runtime' | 'type' | 'dynamic';
+export type GraphEdgeResolution = 'explicit' | 'implicit';
+
+export type GraphEdge = {
+  target: NodeId;
+  kind: GraphEdgeKind;
+  resolution: GraphEdgeResolution;
+};
+
+export type DependencyGraph = {
+  nodes: Record<NodeId, GraphNode>;
+  /** Outgoing adjacency list. MUST contain a key for every NodeId in `nodes`. */
+  edges: Record<NodeId, GraphEdge[]>;
+};
+```
+
+### Node requirements
+
+- `nodes` MUST contain an entry for every discovered file in the Universe.
+- Node kinds:
+  - `source`: file on disk intended to represent the repo Universe (including non-code files).
+  - `external`: file resolved from dependencies (commonly under `node_modules`), including pnpm physical paths.
+  - `builtin`: Node.js built-in modules, normalized to `node:<name>`.
+  - `missing`: unresolved specifier (no file on disk).
+- `language` is derived from file extension; for `builtin` and `missing`, use `other`.
+
+### Metadata requirements (sparse)
+
+- `metadata` is optional and MUST be sparse to reduce payload size.
+- Omit fields when they would be `null`/falsey:
+  - omit `size` if unknown/not applicable,
+  - omit `hash` if unknown/not applicable,
+  - omit `isOutsideRoot` unless it is `true`.
+- Required hashing:
+  - `source` and `external` nodes MUST have `metadata.size` and `metadata.hash`.
+  - `builtin` and `missing` nodes MUST NOT have `metadata.hash` (omit).
+- Outside-root:
+  - Any node whose resolved physical path is outside `cwd` MUST set `metadata.isOutsideRoot: true`.
+
+### Edge requirements
+
+- The graph stores only module-level relationships (file → file/module). No symbol/function/class nodes.
+- Edges are directional: `sourceNodeId` (implicit by `edges[sourceNodeId]`) → `target`.
+- Edge kinds:
+  - `runtime`: static `import`/`export` dependencies and top-level `require()`.
+  - `dynamic`: any `import()` expression (even at top level); optionally dynamic `require()` inside functions.
+  - `type`: `import type` / `export type`, plus best-effort semantic “type-only” detection when cheap; otherwise fall back to `runtime`.
+- Edge `resolution`:
+  - `explicit`: directly imported module/file (architectural dependency).
+  - `implicit`: barrel-tunneled dependency to the defining module (physical dependency).
+
+Constraints:
+
+- De-duplication: the tuple `(source, target, kind, resolution)` MUST be unique.
+- Determinism:
+  - Node keys in `nodes` are serialized in sorted key order.
+  - `edges` MUST contain a key for every node ID in `nodes` (even if `[]`).
+  - Edge lists MUST be sorted deterministically (target, then kind, then resolution).
+  - When `metadata` fields are present, their key ordering MUST be deterministic (`hash`, `isOutsideRoot`, `size`).
+
+## Universe scanning (defining “source”)
+
+Inputs:
+
+- `cwd` (repo root).
+- Config selection:
+  - `includes?: string[]` (additive allow; can override `.gitignore`),
+  - `excludes?: string[]` (deny; highest precedence),
+  - `anchors?: string[]` (high-precedence allow; may override excludes and `.gitignore`).
+
+Base behavior:
+
+- Scan using `fast-glob` and POSIX-normalize all paths.
+- Respect `.gitignore` rules (unless re-included by `includes`/`anchors`).
+- Implicit exclusions (always applied unless explicitly re-included):
+  - `.git/**`
+  - `node_modules/**`
+- `stan-context` is not required to hardcode `<stanPath>` reserved denials; `stan-core` supplies those via `config.excludes`.
+- Every file in the Universe becomes a `source` node, even if it produces no edges.
+
+## TypeScript/JavaScript provider (default)
+
+Supported source extensions:
+
+- `.ts`, `.tsx`, `.js`, `.jsx`, `.d.ts`
+
+Program creation:
+
+- The Universe scan determines the set of “source files” to analyze.
+- Load `tsconfig.json` ONLY to obtain `compilerOptions` (paths/baseUrl/jsx/moduleResolution/etc.).
+- Do NOT use tsconfig `include`/`exclude` to choose files; pass Universe file list as `rootNames`.
+- If `tsconfig.json` is missing/invalid, use permissive defaults (at minimum `allowJs: true`).
+
+Module resolution outcomes:
+
+- Builtins:
+  - Normalize `fs` → `node:fs` using Node’s builtin module list (`module.builtinModules`).
+- Source outside Universe but on disk:
+  - Create a `source` node with `size` and `hash` and include it in the graph.
+- External:
+  - Resolve to the physical file path; create an `external` node with `size` and `hash`.
+  - If the resolved physical path is outside `cwd`, use absolute NodeId and set `isOutsideRoot: true`.
+- Missing/unresolved:
+  - Create a `missing` node with `id` equal to the specifier and no metadata.
+
+JSON imports:
+
+- If TypeScript resolves `import data from './x.json'`, emit a normal edge to the JSON node (which exists from Universe scan).
+
+### Barrel tunneling (symbol-aware implicit edges)
+
+- For named/default imports that resolve through a barrel (`index.ts`), emit:
+  - an explicit edge to the barrel module, and
+  - implicit edges to the defining module(s) of the imported symbol(s).
+- Tunneling MUST be symbol-aware:
+  - link only to the module(s) that declare the specific imported symbol,
+  - if a symbol merges declarations across multiple files, emit one implicit edge per declaring file.
+- `export * from` MUST participate in tunneling.
+- Namespace imports (`import * as Ns from ...`) MUST NOT be tunneled; keep only the explicit edge to the barrel.
+
+### External dependencies (“Commander rule”)
+
+- Default external behavior is shallow:
+  - Resolve an import to its external entry point and stop (do not analyze the external’s dependencies).
+- Commander rule:
+  - If the external entry point is a barrel that re-exports from files within the same package, follow those re-exports and include those internal package files as external nodes/edges.
+  - Boundary: “same package” is defined by nearest `package.json`. Stop when re-exports cross into a different nearest-`package.json` context.
+- Workspace/monorepo linking:
+  - If a resolved dependency is physically within the repo root and is not under `node_modules/**`, treat it as `source`.
+
+## Incrementalism (previousGraph)
+
+- `generateDependencyGraph` accepts `previousGraph` for incremental rebuilds.
+- Hashing:
+  - Compute SHA-256 for all current Universe `source` files.
+  - Compute SHA-256 for any `external` files that appear in the graph (resolved during analysis).
+- Dirty detection:
+  - Re-analyze changed/new/deleted files.
+  - Also re-analyze reverse dependencies (files that import changed files), to keep barrel tunneling correct.
+- Persisted state is owned by `stan-core`; stan-context treats `previousGraph` as an opaque JSON input.
+
+## Dependencies and graceful degradation
+
+- `typescript` is a peer dependency.
+  - If it is missing at runtime, Universe scanning and hashing still run and the function returns a nodes-only graph (empty edge lists) plus an error/warning in `errors`.
+- Hashing uses `node:crypto`.
+
+## API contract (initial)
+
+```ts
+export type GraphOptions = {
+  cwd: string;
+  config?: {
+    includes?: string[];
+    excludes?: string[];
+    anchors?: string[];
+  };
+  previousGraph?: DependencyGraph;
+};
+
+export type GraphResult = {
+  graph: DependencyGraph;
+  stats: {
+    modules: number;
+    edges: number;
+    dirty: number;
+  };
+  errors: string[];
+};
+
+export function generateDependencyGraph(
+  opts: GraphOptions,
+): Promise<GraphResult>;
+```

@@ -7,7 +7,7 @@
     "hideCredit": true
   },
   "bugs": {
-    "url": "https://github.com/karmaniverous/stan-core/issues"
+    "url": "https://github.com/karmaniverous/stan-context/issues"
   },
   "dependencies": {
     "diff": "^8.0.2",
@@ -98,7 +98,7 @@
   "license": "BSD-3-Clause",
   "main": "dist/cjs/index.js",
   "module": "dist/mjs/index.js",
-  "name": "@karmaniverous/stan-core",
+  "name": "@karmaniverous/stan-context",
   "publishConfig": {
     "access": "public"
   },
@@ -135,7 +135,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/karmaniverous/stan-core.git"
+    "url": "git+https://github.com/karmaniverous/stan-context.git"
   },
   "scripts": {
     "build": "rimraf dist .rollup.cache .tsbuildinfo && rollup --config rollup.config.ts --configPlugin @rollup/plugin-typescript",
