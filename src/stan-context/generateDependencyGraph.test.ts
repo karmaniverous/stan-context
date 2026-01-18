@@ -1,16 +1,17 @@
 import { withTempDir, writeFile } from '../test/temp';
-import { generateDependencyGraph } from './generateDependencyGraph';
-
-vi.mock('./providers/ts/load', () => {
-  return {
-    tryLoadTypeScript: () => null,
-  };
-});
 
 describe('generateDependencyGraph', () => {
   test('returns nodes-only graph when TypeScript is missing', async () => {
     await withTempDir(async (cwd) => {
       await writeFile(cwd, 'a.ts', 'export const x = 1;\n');
+
+      vi.resetModules();
+      vi.doMock('./providers/ts/load', () => {
+        return { tryLoadTypeScript: () => null };
+      });
+      const { generateDependencyGraph } = await import(
+        './generateDependencyGraph'
+      );
 
       const res = await generateDependencyGraph({ cwd });
 
@@ -24,6 +25,9 @@ describe('generateDependencyGraph', () => {
       for (const id of Object.keys(res.graph.nodes)) {
         expect(res.graph.edges[id]).toBeTruthy();
       }
+
+      vi.resetModules();
+      vi.unmock('./providers/ts/load');
     });
   });
 });

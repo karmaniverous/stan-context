@@ -1,8 +1,15 @@
 import { withTempDir, writeFile } from '../../../test/temp';
-import { generateDependencyGraph } from '../../generateDependencyGraph';
+
+const loadGenerateDependencyGraph = async () => {
+  vi.resetModules();
+  const mod = await import('../../generateDependencyGraph');
+  return mod.generateDependencyGraph;
+};
 
 const targets = (
-  graph: Awaited<ReturnType<typeof generateDependencyGraph>>['graph'],
+  graph: Awaited<
+    ReturnType<Awaited<ReturnType<typeof loadGenerateDependencyGraph>>>
+  >['graph'],
   from: string,
 ): string[] =>
   graph.edges[from].map((e) => `${e.resolution}:${e.kind}:${e.target}`);
@@ -43,6 +50,7 @@ describe('TypeScript provider (integration)', () => {
         `import type { User } from './models';\nexport const u: User = { id: '1' };\n`,
       );
 
+      const generateDependencyGraph = await loadGenerateDependencyGraph();
       const res = await generateDependencyGraph({ cwd });
       const t = targets(res.graph, 'feature.ts');
 
@@ -77,6 +85,7 @@ describe('TypeScript provider (integration)', () => {
         `import * as Ns from './barrel';\nvoid Ns;\n`,
       );
 
+      const generateDependencyGraph = await loadGenerateDependencyGraph();
       const res = await generateDependencyGraph({ cwd });
       const t = targets(res.graph, 'use.ts');
       expect(t).toContain('explicit:runtime:barrel.ts');
@@ -107,6 +116,7 @@ describe('TypeScript provider (integration)', () => {
       await writeFile(cwd, 'builtin.ts', `import fs from 'fs';\nvoid fs;\n`);
       await writeFile(cwd, 'miss.ts', `import x from './nope';\nvoid x;\n`);
 
+      const generateDependencyGraph = await loadGenerateDependencyGraph();
       const res = await generateDependencyGraph({ cwd });
 
       expect(
@@ -186,6 +196,7 @@ describe('TypeScript provider (integration)', () => {
         `import { A, B } from 'pkg';\nexport const a: A = { a: 'x' };\nexport const b: B = { b: 'y' };\n`,
       );
 
+      const generateDependencyGraph = await loadGenerateDependencyGraph();
       const res = await generateDependencyGraph({ cwd });
       const t = targets(res.graph, 'usepkg.ts');
 
