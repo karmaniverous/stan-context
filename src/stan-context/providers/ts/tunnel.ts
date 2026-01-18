@@ -31,23 +31,65 @@ const resolveAliasChain = (args: {
   return cur;
 };
 
+const addDeclarationFiles = (args: {
+  ts: typeof import('typescript');
+  checker: import('typescript').TypeChecker;
+  symbol: import('typescript').Symbol;
+  out: Set<string>;
+  seenSymbols: Set<import('typescript').Symbol>;
+}): void => {
+  const resolved = resolveAliasChain({
+    ts: args.ts,
+    checker: args.checker,
+    symbol: args.symbol,
+  });
+
+  if (args.seenSymbols.has(resolved)) return;
+  args.seenSymbols.add(resolved);
+
+  const decls = resolved.getDeclarations() ?? [];
+  for (const d of decls) {
+    // If this is a re-export specifier, follow the local target symbol so we
+    // tunnel to the file that actually defines the symbol.
+    if (args.ts.isExportSpecifier(d)) {
+      const target = args.checker.getExportSpecifierLocalTargetSymbol(d);
+      if (target) {
+        addDeclarationFiles({
+          ts: args.ts,
+          checker: args.checker,
+          symbol: target,
+          out: args.out,
+          seenSymbols: args.seenSymbols,
+        });
+        continue;
+      }
+    }
+
+    args.out.add(d.getSourceFile().fileName);
+  }
+};
+
 export const getDeclarationFilesForImport = (args: {
   ts: typeof import('typescript');
   checker: import('typescript').TypeChecker;
   identifiers: import('typescript').Identifier[];
 }): string[] => {
   const out = new Set<string>();
+  const seenSymbols = new Set<import('typescript').Symbol>();
+
   for (const ident of args.identifiers) {
     const sym = args.checker.getSymbolAtLocation(ident);
     if (!sym) continue;
-    const target = resolveAliasChain({
+
+    addDeclarationFiles({
       ts: args.ts,
       checker: args.checker,
       symbol: sym,
+      out,
+      seenSymbols,
     });
-    const decls = target.getDeclarations() ?? [];
-    for (const d of decls) out.add(d.getSourceFile().fileName);
   }
+
   return Array.from(out);
 };
 

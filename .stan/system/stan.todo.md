@@ -86,7 +86,6 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
   - `src/stan-context/providers/ts/tsconfig.ts` — load compilerOptions (only)
   - `src/stan-context/providers/ts/moduleResolution.ts` — resolve specifiers (builtin/missing/file)
   - `src/stan-context/providers/ts/extract.ts` — extract explicit deps + tunnel requests
-  - `src/stan-context/providers/ts/packageRoot.ts` — nearest package.json boundary helper
   - `src/stan-context/providers/ts/tunnel.ts` — symbol-aware tunneling + commander boundary filter
   - `src/stan-context/providers/ts/analyze.ts` — analyze dirty sources and emit nodes/edges
 
@@ -98,4 +97,6 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 - Implemented Universe scan + nodes-only graph scaffold with tests.
 - Replaced dynamic import TS loader; fixed parse/lint warnings.
 - Adopted TSDoc escaping policy; fixed comment escapes.
-- Fixed strict lint/typecheck issues after TS provider wiring.- Switched package boundary detection to package-directory.
+- Fixed strict lint/typecheck issues after TS provider wiring.
+- Switched package boundary detection to package-directory.
+- Improved tunneling to follow re-exports and pass tests.

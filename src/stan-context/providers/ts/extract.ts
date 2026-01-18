@@ -20,9 +20,7 @@ const isTypeOnlySpecifier = (
   ).phaseModifier;
   if (phase === ts.SyntaxKind.TypeKeyword) return true;
 
-  const rec = el as unknown as Record<string, unknown>;
-  if (!Object.prototype.hasOwnProperty.call(rec, 'isTypeOnly')) return false;
-  return rec['isTypeOnly'] === true;
+  return false;
 };
 
 const isStringLiteralLike = (
@@ -99,9 +97,10 @@ export const extractFromSourceFile = (args: {
 
     if (ts.isImportEqualsDeclaration(stmt)) {
       const ref = stmt.moduleReference;
-      if (ts.isExternalModuleReference(ref) && ref.expression) {
-        if (!isStringLiteralLike(ts, ref.expression)) continue;
-        explicit.push({ specifier: ref.expression.text, kind: 'runtime' });
+      if (ts.isExternalModuleReference(ref)) {
+        const expr = ref.expression;
+        if (!isStringLiteralLike(ts, expr)) continue;
+        explicit.push({ specifier: expr.text, kind: 'runtime' });
       }
     }
   }
@@ -116,16 +115,22 @@ export const extractFromSourceFile = (args: {
     if (ts.isCallExpression(n)) {
       // import('x')
       if (n.expression.kind === ts.SyntaxKind.ImportKeyword) {
-        const [arg] = n.arguments;
-        if (arg && isStringLiteralLike(ts, arg)) {
+        if (
+          n.arguments.length >= 1 &&
+          isStringLiteralLike(ts, n.arguments[0])
+        ) {
+          const arg = n.arguments[0];
           explicit.push({ specifier: arg.text, kind: 'dynamic' });
         }
       }
 
       // require('x')
       if (ts.isIdentifier(n.expression) && n.expression.text === 'require') {
-        const [arg] = n.arguments;
-        if (arg && isStringLiteralLike(ts, arg)) {
+        if (
+          n.arguments.length >= 1 &&
+          isStringLiteralLike(ts, n.arguments[0])
+        ) {
+          const arg = n.arguments[0];
           explicit.push({
             specifier: arg.text,
             kind: functionDepth > 0 ? 'dynamic' : 'runtime',
