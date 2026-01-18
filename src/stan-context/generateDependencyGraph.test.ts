@@ -3,9 +3,7 @@ import { generateDependencyGraph } from './generateDependencyGraph';
 
 vi.mock('./providers/ts/load', () => {
   return {
-    loadTypeScript: async () => {
-      throw new Error('typescript not installed');
-    },
+    tryLoadTypeScript: () => null,
   };
 });
 

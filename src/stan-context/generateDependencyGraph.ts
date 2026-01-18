@@ -8,11 +8,17 @@
 
 import path from 'node:path';
 
-import type { DependencyGraph, GraphOptions, GraphResult, NodeId } from './types';
-import { makeHashedFileNode } from './core/nodes';
 import { finalizeGraph } from './core/finalize';
+import { makeHashedFileNode } from './core/nodes';
 import { scanUniverseFiles } from './core/universe';
-import { loadTypeScript } from './providers/ts/load';
+import { tryLoadTypeScript } from './providers/ts/load';
+import type {
+  DependencyGraph,
+  GraphNode,
+  GraphOptions,
+  GraphResult,
+  NodeId,
+} from './types';
 
 const emptyEdgesMap = (nodes: Record<NodeId, unknown>): Record<NodeId, []> => {
   const out: Record<NodeId, []> = {};
@@ -28,16 +34,15 @@ export const generateDependencyGraph = async (
 
   const universeIds = await scanUniverseFiles({ cwd, config: opts.config });
 
-  const nodes: Record<NodeId, (await import('./types')).GraphNode> = {};
+  const nodes: Record<NodeId, GraphNode> = {};
   for (const id of universeIds) {
     const absPath = path.join(cwd, id);
     nodes[id] = await makeHashedFileNode({ absPath, cwd, kind: 'source' });
   }
 
   // Attempt to load TypeScript. If missing, return nodes-only graph.
-  try {
-    await loadTypeScript();
-  } catch {
+  const ts = tryLoadTypeScript();
+  if (!ts) {
     errors.push(
       'typescript peer dependency not found; returning nodes-only graph',
     );
@@ -51,6 +56,7 @@ export const generateDependencyGraph = async (
       errors,
     };
   }
+  void ts;
 
   // TODO (next dev-plan step): TypeScript provider analysis + incrementalism.
   const graph: DependencyGraph = finalizeGraph({
