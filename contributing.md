@@ -30,33 +30,6 @@ npm run docs
 npm run knip
 ```
 
-### Dev fallback (bootstrap scripts)
-If `stan run` is temporarily broken while developing STAN itself, use the
-bootstrap scripts as a stopgap to exercise the pipeline and generate the usual
-artifacts (outputs and archive) without relying on the CLI:
-
-- Primary orchestrator (runs multiple tasks concurrently and then archives):
-  ```bash
-  npm run bootstrap
-  ```
-  This will:
-  - run typecheck, lint, test, build, and docs concurrently,
-  - write deterministic outputs to `.stan/output/*.txt`,
-  - and create `.stan/output/archive.tar`.
-
-- You can also run individual bootstrap tasks:
-  ```bash
-  npm run bootstrap:typecheck
-  npm run bootstrap:lint
-  npm run bootstrap:test
-  npm run bootstrap:build
-  npm run bootstrap:docs
-  npm run bootstrap:archive
-  ```
-
-Note: these bootstrap scripts are for STAN development only (fallback tooling).
-Consumers of STAN should use the CLI directly, e.g. `stan run`.
-
 ## Coding standards
 
 - Single‑Responsibility modules; prefer small, testable units.

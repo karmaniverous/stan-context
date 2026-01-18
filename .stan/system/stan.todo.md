@@ -87,13 +87,7 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
   - `src/providers/ts/tunnel.ts` — barrel tunneling (symbol-aware; excludes namespace imports)
   - `src/providers/ts/externals.ts` — commander rule (package boundary walk)
 
-## Risks / watch-outs
-
-- Large repos: creating a Program over the full Universe may be expensive; evaluate whether Program creation can be kept stable while limiting per-file work to `dirty`.
-- ESM/CJS edge cases: dynamic `import()` and `require()` classification is best-effort; keep rules consistent and covered by tests.
-- External resolution portability: pnpm store paths and symlinks must be represented faithfully (physical paths) to avoid “fake certainty”.
-
 ## Completed
 
 - Captured clarified graph schema, invariants, and implementation plan (requirements + todo).
-- Removed stan-core template identity from repo metadata/docs/config.
+- Removed stan-core template identity from repo metadata/docs/config.- Moved implementation watch-outs to stan.project.md.
