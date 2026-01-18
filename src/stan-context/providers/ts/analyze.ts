@@ -1,7 +1,7 @@
 /**
  * Requirements addressed:
  * - TS/JS provider: explicit edges + barrel tunneling (symbol-aware).
- * - Builtin normalization: fs => node:fs.
+ * - Builtin normalization: fs =\> node:fs.
  * - Missing module nodes (kind: missing; id = specifier).
  * - External commander rule: for external entrypoints, tunnel only within the
  *   same nearest-package.json boundary.
@@ -11,14 +11,18 @@ import path from 'node:path';
 
 import { makeHashedFileNode, makeNode } from '../../core/nodes';
 import { absPathToNodeId, toPosixPath } from '../../core/paths';
-import type { GraphEdge, GraphEdgeKind, GraphNode, NodeId } from '../../types';
-import { inferLanguageFromPath } from '../../types';
+import type { GraphEdge, GraphNode, NodeId } from '../../types';
 import { extractFromSourceFile } from './extract';
 import { resolveModuleSpecifier } from './moduleResolution';
 import { filterCommanderRule, getDeclarationFilesForImport } from './tunnel';
 
 const isNodeModulesPath = (absPath: string): boolean =>
   toPosixPath(absPath).includes('/node_modules/');
+
+const hasOwn = (rec: object, key: string): boolean =>
+  Object.prototype.hasOwnProperty.call(rec, key);
+const getOwn = <T>(rec: Record<string, T>, key: string): T | undefined =>
+  hasOwn(rec, key) ? rec[key] : undefined;
 
 const ensureNode = async (args: {
   cwd: string;
@@ -27,8 +31,11 @@ const ensureNode = async (args: {
   kindHint: 'source' | 'external';
 }): Promise<GraphNode> => {
   const { id } = absPathToNodeId(args.absPath, args.cwd);
-  const existing = args.existing[id];
-  if (existing?.metadata?.hash && existing?.metadata?.size !== undefined)
+  const existing = getOwn(args.existing, id);
+  if (
+    typeof existing?.metadata?.hash === 'string' &&
+    typeof existing?.metadata?.size === 'number'
+  )
     return existing;
   const created = await makeHashedFileNode({
     absPath: args.absPath,
@@ -43,12 +50,12 @@ const ensureBuiltinNode = (
   nodes: Record<NodeId, GraphNode>,
   id: `node:${string}`,
 ) => {
-  if (nodes[id]) return;
+  if (hasOwn(nodes, id)) return;
   nodes[id] = makeNode({ id, kind: 'builtin', language: 'other' });
 };
 
 const ensureMissingNode = (nodes: Record<NodeId, GraphNode>, id: string) => {
-  if (nodes[id]) return;
+  if (hasOwn(nodes, id)) return;
   nodes[id] = makeNode({ id, kind: 'missing', language: 'other' });
 };
 
@@ -120,7 +127,8 @@ export const analyzeTypeScript = async (args: {
       }
 
       const { id } = absPathToNodeId(resolved.absPath, cwd);
-      const inUniverseAsSource = nodes[id]?.kind === 'source';
+      const inUniverseAsSource =
+        hasOwn(nodes, id) && nodes[id].kind === 'source';
       const kindHint: 'source' | 'external' =
         inUniverseAsSource ||
         (!resolved.isExternalLibraryImport &&
@@ -168,13 +176,8 @@ export const analyzeTypeScript = async (args: {
 
       for (const declAbs of filtered) {
         const { id } = absPathToNodeId(declAbs, cwd);
-        const lang = inferLanguageFromPath(id);
-        if (lang === 'other') {
-          // Still allow .d.ts and other resolvable files; we only skip unknown
-          // file extensions (e.g., lib.dom.d.ts resolves to ts).
-        }
-
-        const inUniverseAsSource = nodes[id]?.kind === 'source';
+        const inUniverseAsSource =
+          hasOwn(nodes, id) && nodes[id].kind === 'source';
         const kindHint: 'source' | 'external' =
           inUniverseAsSource ||
           (!isNodeModulesPath(declAbs) && !resolved.isExternalLibraryImport)

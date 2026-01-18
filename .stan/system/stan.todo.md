@@ -5,10 +5,12 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 ## Next up
 
 - Establish source scaffolding (provider model)
-  - Add the TypeScript provider implementation (edge extraction, resolution, tunneling, commander rule).
-  - Add incremental planning (dirty set + reverse deps closure, including re-hashing previous external/source nodes).
-  - Wire incremental reuse: copy previousGraph nodes/edges for non-dirty sources.
-  - Add tests for tunneling, commander rule, and incremental invalidation.
+  - Stabilize the TS provider implementation under strict linting rules:
+    - Avoid deprecated TS AST properties (use `phaseModifier`-based detection).
+    - Use `hasOwnProperty` guards when reading `Record<...>` maps across graph instances.
+  - Add incremental-specific tests:
+    - dirty includes reverse deps closure
+    - external hash changes cause dependent re-analysis
 - Implement Universe scan (core)
   - Discover files with `fast-glob` (POSIX-normalized repo-relative paths).
   - Apply selection in a deterministic order:
@@ -96,3 +98,4 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 - Implemented Universe scan + nodes-only graph scaffold with tests.
 - Replaced dynamic import TS loader; fixed parse/lint warnings.
 - Adopted TSDoc escaping policy; fixed comment escapes.
+- Fixed strict lint/typecheck issues after TS provider wiring.

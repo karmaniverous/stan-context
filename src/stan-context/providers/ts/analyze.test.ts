@@ -1,5 +1,5 @@
-import { withTempDir, writeFile } from '../../test/temp';
-import { generateDependencyGraph } from '../generateDependencyGraph';
+import { withTempDir, writeFile } from '../../../test/temp';
+import { generateDependencyGraph } from '../../generateDependencyGraph';
 
 const targets = (
   graph: Awaited<ReturnType<typeof generateDependencyGraph>>['graph'],

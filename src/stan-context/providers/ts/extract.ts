@@ -11,6 +11,19 @@ export type TunnelRequest = {
   identifiers: import('typescript').Identifier[];
 };
 
+const isTypeOnlySpecifier = (
+  ts: typeof import('typescript'),
+  el: import('typescript').ImportSpecifier,
+): boolean => {
+  const phase = (
+    el as unknown as { phaseModifier?: import('typescript').SyntaxKind }
+  ).phaseModifier;
+  if (phase === ts.SyntaxKind.TypeKeyword) return true;
+
+  const legacy = (el as unknown as { isTypeOnly?: boolean }).isTypeOnly;
+  return legacy === true;
+};
+
 const isStringLiteralLike = (
   ts: typeof import('typescript'),
   n: import('typescript').Node,
@@ -25,8 +38,8 @@ const classifyImportDeclarationKind = (
   if (!clause) return 'runtime';
   if (clause.isTypeOnly) return 'type';
   if (clause.namedBindings && ts.isNamedImports(clause.namedBindings)) {
-    const allTypeOnly = clause.namedBindings.elements.every(
-      (e) => e.isTypeOnly,
+    const allTypeOnly = clause.namedBindings.elements.every((e) =>
+      isTypeOnlySpecifier(ts, e),
     );
     if (allTypeOnly && !clause.name) return 'type';
   }
@@ -44,7 +57,7 @@ export const extractFromSourceFile = (args: {
 
   // Imports / exports with module specifiers.
   for (const stmt of sourceFile.statements) {
-    if (ts.isImportDeclaration(stmt) && stmt.moduleSpecifier) {
+    if (ts.isImportDeclaration(stmt)) {
       if (!isStringLiteralLike(ts, stmt.moduleSpecifier)) continue;
       const spec = stmt.moduleSpecifier.text;
       const kind = classifyImportDeclarationKind(ts, stmt);
@@ -62,7 +75,9 @@ export const extractFromSourceFile = (args: {
       if (clause.namedBindings && ts.isNamedImports(clause.namedBindings)) {
         for (const el of clause.namedBindings.elements) {
           // For "import { type X }", tunnel as type-only for this identifier.
-          const elKind: GraphEdgeKind = el.isTypeOnly ? 'type' : kind;
+          const elKind: GraphEdgeKind = isTypeOnlySpecifier(ts, el)
+            ? 'type'
+            : kind;
           tunnels.push({
             specifier: spec,
             kind: elKind,

@@ -17,6 +17,7 @@ import { tryLoadTypeScript } from './providers/ts/load';
 import { loadCompilerOptions } from './providers/ts/tsconfig';
 import type {
   DependencyGraph,
+  GraphEdge,
   GraphNode,
   GraphOptions,
   GraphResult,
@@ -32,12 +33,6 @@ const isAnalyzableSource = (id: string): boolean => {
     lower.endsWith('.js') ||
     lower.endsWith('.jsx')
   );
-};
-
-const emptyEdgesMap = (nodes: Record<NodeId, unknown>): Record<NodeId, []> => {
-  const out: Record<NodeId, []> = {};
-  for (const id of Object.keys(nodes)) out[id] = [];
-  return out;
 };
 
 export const generateDependencyGraph = async (
@@ -70,7 +65,7 @@ export const generateDependencyGraph = async (
     ...inc.carriedNodes,
     ...currentNodes,
   };
-  const edgesBase: Record<NodeId, import('./types').GraphEdge[]> = {
+  const edgesBase: Record<NodeId, GraphEdge[]> = {
     ...inc.reusedEdgesBySource,
   };
 
@@ -106,7 +101,7 @@ export const generateDependencyGraph = async (
     baseNodes,
   });
 
-  const mergedEdges: Record<NodeId, import('./types').GraphEdge[]> = {
+  const mergedEdges: Record<NodeId, GraphEdge[]> = {
     ...edgesBase,
     ...analyzed.edgesBySource,
   };

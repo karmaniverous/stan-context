@@ -20,10 +20,13 @@ export const loadCompilerOptions = (args: {
     moduleResolution: ts.ModuleResolutionKind.Node16,
   };
 
-  const configPath = ts.findConfigFile(cwd, ts.sys.fileExists, 'tsconfig.json');
+  const fileExists = (p: string) => ts.sys.fileExists(p);
+  const readFile = (p: string) => ts.sys.readFile(p);
+
+  const configPath = ts.findConfigFile(cwd, fileExists, 'tsconfig.json');
   if (!configPath) return defaultOptions;
 
-  const read = ts.readConfigFile(configPath, ts.sys.readFile);
+  const read = ts.readConfigFile(configPath, readFile);
   if (read.error) return defaultOptions;
 
   const parsed = ts.parseJsonConfigFileContent(

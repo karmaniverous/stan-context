@@ -17,6 +17,11 @@ export type IncrementalPlan = {
   changedNodeIds: Set<NodeId>;
 };
 
+const hasOwn = (rec: object, key: string): boolean =>
+  Object.prototype.hasOwnProperty.call(rec, key);
+const getOwn = <T>(rec: Record<string, T>, key: string): T | undefined =>
+  hasOwn(rec, key) ? rec[key] : undefined;
+
 const buildReverseDeps = (
   edges: Record<NodeId, GraphEdge[]>,
 ): Map<NodeId, Set<NodeId>> => {
@@ -86,7 +91,7 @@ export const planIncremental = async (args: {
   // (1) Compare current universe nodes against previous hashes.
   for (const [id, n] of Object.entries(args.currentNodes)) {
     if (!isHashComparable(n)) continue;
-    const prevHash = prev.nodes[id]?.metadata?.hash;
+    const prevHash = getOwn(prev.nodes, id)?.metadata?.hash;
     if (prevHash !== n.metadata?.hash) changed.add(id);
   }
 
@@ -94,7 +99,7 @@ export const planIncremental = async (args: {
   // reverse-dep invalidation.
   for (const [id, prevNode] of Object.entries(prev.nodes)) {
     if (prevNode.kind !== 'source') continue;
-    if (args.currentNodes[id]) continue;
+    if (hasOwn(args.currentNodes, id)) continue;
     changed.add(id);
   }
 
@@ -120,8 +125,9 @@ export const planIncremental = async (args: {
   const reusedEdgesBySource: Record<NodeId, GraphEdge[]> = {};
   for (const id of args.analyzableSourceIds) {
     if (dirtySourceIds.has(id)) continue;
-    const prevEdges = prev.edges[id];
-    if (prevEdges) reusedEdgesBySource[id] = prevEdges;
+    if (hasOwn(prev.edges, id)) {
+      reusedEdgesBySource[id] = prev.edges[id];
+    }
   }
 
   // (6) Carry forward nodes referenced by reused edges so the graph has no
@@ -134,9 +140,11 @@ export const planIncremental = async (args: {
 
   const carriedNodes: Record<NodeId, GraphNode> = {};
   for (const id of referenced) {
-    if (args.currentNodes[id]) continue;
-    const prevNode = prev.nodes[id];
-    if (prevNode) carriedNodes[id] = prevNode;
+    if (hasOwn(args.currentNodes, id)) continue;
+    const prevNode = getOwn(prev.nodes, id);
+    if (prevNode) {
+      carriedNodes[id] = prevNode;
+    }
   }
 
   return {

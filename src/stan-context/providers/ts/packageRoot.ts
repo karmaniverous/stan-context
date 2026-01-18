@@ -5,8 +5,7 @@ const cache = new Map<string, string | null>();
 
 export const findNearestPackageRoot = (absFile: string): string | null => {
   const start = path.dirname(absFile);
-  const cached = cache.get(start);
-  if (cached !== undefined) return cached;
+  if (cache.has(start)) return cache.get(start) as string | null;
 
   let cur = start;
   while (true) {
