@@ -98,4 +98,4 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 - Implemented Universe scan + nodes-only graph scaffold with tests.
 - Replaced dynamic import TS loader; fixed parse/lint warnings.
 - Adopted TSDoc escaping policy; fixed comment escapes.
-- Fixed strict lint/typecheck issues after TS provider wiring.
+- Fixed strict lint/typecheck issues after TS provider wiring.- Switched package boundary detection to package-directory.

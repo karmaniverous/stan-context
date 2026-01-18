@@ -20,8 +20,9 @@ const isTypeOnlySpecifier = (
   ).phaseModifier;
   if (phase === ts.SyntaxKind.TypeKeyword) return true;
 
-  const legacy = (el as unknown as { isTypeOnly?: boolean }).isTypeOnly;
-  return legacy === true;
+  const rec = el as unknown as Record<string, unknown>;
+  if (!Object.prototype.hasOwnProperty.call(rec, 'isTypeOnly')) return false;
+  return rec['isTypeOnly'] === true;
 };
 
 const isStringLiteralLike = (

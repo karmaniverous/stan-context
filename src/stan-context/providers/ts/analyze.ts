@@ -32,11 +32,12 @@ const ensureNode = async (args: {
 }): Promise<GraphNode> => {
   const { id } = absPathToNodeId(args.absPath, args.cwd);
   const existing = getOwn(args.existing, id);
-  if (
-    typeof existing?.metadata?.hash === 'string' &&
-    typeof existing?.metadata?.size === 'number'
-  )
-    return existing;
+  if (existing) {
+    const md = existing.metadata;
+    if (md && typeof md.hash === 'string' && typeof md.size === 'number') {
+      return existing;
+    }
+  }
   const created = await makeHashedFileNode({
     absPath: args.absPath,
     cwd: args.cwd,
@@ -170,7 +171,6 @@ export const analyzeTypeScript = async (args: {
         ? filterCommanderRule({
             barrelAbsPath: resolved.absPath,
             declarationAbsPaths: decls,
-            kind: t.kind,
           })
         : decls;
 

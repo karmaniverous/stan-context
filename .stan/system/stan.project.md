@@ -12,6 +12,10 @@ Requirements belong in `.stan/system/stan.requirements.md`. Work tracking belong
 - Keep the public contract small and deterministic:
   - Avoid “debug convenience” fields in the graph schema (e.g., storing raw import specifiers on edges) unless we explicitly decide the payload cost is worth it.
 
+## Dependency preference (Open-Source First)
+
+- Prefer `package-directory` for nearest `package.json` discovery (package boundary logic).
+
 ## Dynamic import policy
 
 - Avoid dynamic imports (`import()`) unless there is a compelling argument.

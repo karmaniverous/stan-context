@@ -21,6 +21,7 @@
     "fast-glob": "^3.3.3",
     "glob-parent": "^6.0.2",
     "ignore": "^7.0.5",
+    "package-directory": "^8.1.0",
     "picomatch": "^4.0.3"
   },
   "description": "Context compiler for STAN — scan a repo and produce a deterministic dependency graph for LLM-driven file selection.",

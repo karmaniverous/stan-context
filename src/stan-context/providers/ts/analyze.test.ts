@@ -109,12 +109,18 @@ describe('TypeScript provider (integration)', () => {
 
       const res = await generateDependencyGraph({ cwd });
 
-      expect(res.graph.nodes['node:fs']?.kind).toBe('builtin');
+      expect(
+        Object.prototype.hasOwnProperty.call(res.graph.nodes, 'node:fs'),
+      ).toBe(true);
+      expect(res.graph.nodes['node:fs'].kind).toBe('builtin');
       expect(targets(res.graph, 'builtin.ts')).toContain(
         'explicit:runtime:node:fs',
       );
 
-      expect(res.graph.nodes['./nope']?.kind).toBe('missing');
+      expect(
+        Object.prototype.hasOwnProperty.call(res.graph.nodes, './nope'),
+      ).toBe(true);
+      expect(res.graph.nodes['./nope'].kind).toBe('missing');
       expect(targets(res.graph, 'miss.ts')).toContain(
         'explicit:runtime:./nope',
       );
