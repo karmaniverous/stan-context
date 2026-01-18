@@ -1,7 +1,7 @@
 /**
  * Requirements addressed:
  * - NodeId normalization rules (POSIX separators; absolute when outside root).
- * - Windows absolute normalization (for example, "C:/x").
+ * - Windows absolute normalization (example: "C:\\x" =\> "C:/x").
  */
 
 import path from 'node:path';

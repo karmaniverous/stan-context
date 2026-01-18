@@ -3,7 +3,7 @@
  * - Universe scan defines source nodes.
  * - Respect root .gitignore (unless re-included via includes/anchors).
  * - Implicit exclusions: .git/** always; node_modules/** unless explicitly allowed.
- * - Precedence: includes, then excludes, then anchors (anchors override excludes and gitignore).
+ * - Precedence: includes =\> excludes =\> anchors (anchors override excludes and gitignore).
  */
 
 import fs from 'node:fs/promises';

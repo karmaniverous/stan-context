@@ -94,4 +94,4 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 - Removed stan-core template identity from repo metadata/docs/config.
 - Moved implementation watch-outs to stan.project.md.
 - Implemented Universe scan + nodes-only graph scaffold with tests.
-- Replaced dynamic import TS loader; fixed parse/lint warnings.
+- Replaced dynamic import TS loader; fixed parse/lint warnings.- Adopted TSDoc escaping policy; fixed comment escapes.

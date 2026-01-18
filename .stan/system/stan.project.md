@@ -35,6 +35,14 @@ Requirements belong in `.stan/system/stan.requirements.md`. Work tracking belong
   - Represent pnpm store paths and symlinked dependency paths faithfully (physical truth).
   - When a resolved physical path is outside `cwd`, normalize to POSIX separators and mark `metadata.isOutsideRoot: true`.
 
+## TSDoc comment escaping
+
+- We prefer clear, expressive TSDoc comments (including operators like `=>`).
+- Escape special characters to avoid TSDoc parser warnings:
+  - Use `=\>` when writing `=>` in a doc comment.
+  - Escape literal object braces as `\{` and `\}` when writing shapes inline (to avoid “inline tag” parsing).
+  - If a literal Windows path is needed, prefer `C:\\x` rather than `C:\x` in comments.
+
 ## Documentation hygiene reminder
 
 - If we change behavior that affects how `stan-core` consumes the graph, update `.stan/system/stan.requirements.md` in the same change set.
