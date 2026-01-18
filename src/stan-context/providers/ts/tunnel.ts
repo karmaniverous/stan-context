@@ -69,26 +69,51 @@ const addDeclarationFiles = (args: {
   }
 };
 
-export const getDeclarationFilesForImport = (args: {
+const getModuleSymbol = (args: {
   ts: typeof import('typescript');
   checker: import('typescript').TypeChecker;
-  identifiers: import('typescript').Identifier[];
+  moduleSourceFile: import('typescript').SourceFile;
+}): import('typescript').Symbol | null => {
+  const sym = args.checker.getSymbolAtLocation(args.moduleSourceFile);
+  if (sym) return sym;
+  const anySf = args.moduleSourceFile as unknown as { symbol?: unknown };
+  if (anySf.symbol && typeof anySf.symbol === 'object')
+    return anySf.symbol as import('typescript').Symbol;
+  return null;
+};
+
+export const getDeclarationFilesForExportName = (args: {
+  ts: typeof import('typescript');
+  checker: import('typescript').TypeChecker;
+  moduleSourceFile: import('typescript').SourceFile;
+  exportName: string;
 }): string[] => {
-  const out = new Set<string>();
-  const seenSymbols = new Set<import('typescript').Symbol>();
+  const mod = getModuleSymbol({
+    ts: args.ts,
+    checker: args.checker,
+    moduleSourceFile: args.moduleSourceFile,
+  });
+  if (!mod) return [];
 
-  for (const ident of args.identifiers) {
-    const sym = args.checker.getSymbolAtLocation(ident);
-    if (!sym) continue;
-
-    addDeclarationFiles({
-      ts: args.ts,
-      checker: args.checker,
-      symbol: sym,
-      out,
-      seenSymbols,
-    });
+  let exports: import('typescript').Symbol[] = [];
+  try {
+    exports = args.checker.getExportsOfModule(mod);
+  } catch {
+    return [];
   }
+
+  const name = args.exportName;
+  const sym = exports.find((s) => s.getName() === name);
+  if (!sym) return [];
+
+  const out = new Set<string>();
+  addDeclarationFiles({
+    ts: args.ts,
+    checker: args.checker,
+    symbol: sym,
+    out,
+    seenSymbols: new Set<import('typescript').Symbol>(),
+  });
 
   return Array.from(out);
 };

@@ -8,10 +8,10 @@ export type ExplicitImport = {
 export type TunnelRequest = {
   specifier: string;
   kind: GraphEdgeKind;
-  identifiers: import('typescript').Identifier[];
+  exportName: string;
 };
 
-const isTypeOnlySpecifier = (
+const isTypeOnlyImportSpecifier = (
   ts: typeof import('typescript'),
   el: import('typescript').ImportSpecifier,
 ): boolean => {
@@ -21,6 +21,16 @@ const isTypeOnlySpecifier = (
   if (phase === ts.SyntaxKind.TypeKeyword) return true;
 
   return false;
+};
+
+const isTypeOnlyClause = (
+  ts: typeof import('typescript'),
+  clause: import('typescript').ImportClause,
+): boolean => {
+  const phase = (
+    clause as unknown as { phaseModifier?: import('typescript').SyntaxKind }
+  ).phaseModifier;
+  return phase === ts.SyntaxKind.TypeKeyword;
 };
 
 const isStringLiteralLike = (
@@ -35,14 +45,33 @@ const classifyImportDeclarationKind = (
 ): GraphEdgeKind => {
   const clause = stmt.importClause;
   if (!clause) return 'runtime';
-  if (clause.isTypeOnly) return 'type';
+  if (isTypeOnlyClause(ts, clause)) return 'type';
   if (clause.namedBindings && ts.isNamedImports(clause.namedBindings)) {
     const allTypeOnly = clause.namedBindings.elements.every((e) =>
-      isTypeOnlySpecifier(ts, e),
+      isTypeOnlyImportSpecifier(ts, e),
     );
     if (allTypeOnly && !clause.name) return 'type';
   }
   return 'runtime';
+};
+
+const isTypeOnlyExportDeclaration = (
+  ts: typeof import('typescript'),
+  stmt: import('typescript').ExportDeclaration,
+): boolean => {
+  const phase = (
+    stmt as unknown as { phaseModifier?: import('typescript').SyntaxKind }
+  ).phaseModifier;
+  if (phase === ts.SyntaxKind.TypeKeyword) return true;
+
+  const clause = stmt.exportClause;
+  if (!clause || !ts.isNamedExports(clause)) return false;
+  return clause.elements.every((e) => {
+    const p = (
+      e as unknown as { phaseModifier?: import('typescript').SyntaxKind }
+    ).phaseModifier;
+    return p === ts.SyntaxKind.TypeKeyword;
+  });
 };
 
 export const extractFromSourceFile = (args: {
@@ -69,29 +98,30 @@ export const extractFromSourceFile = (args: {
         continue;
       }
 
-      const identifiers: import('typescript').Identifier[] = [];
-      if (clause.name) identifiers.push(clause.name);
+      if (clause.name) {
+        // Default import tunnels to the module's "default" export.
+        tunnels.push({ specifier: spec, kind, exportName: 'default' });
+      }
       if (clause.namedBindings && ts.isNamedImports(clause.namedBindings)) {
         for (const el of clause.namedBindings.elements) {
-          // For "import { type X }", tunnel as type-only for this identifier.
-          const elKind: GraphEdgeKind = isTypeOnlySpecifier(ts, el)
-            ? 'type'
-            : kind;
+          const exportName = el.propertyName?.text ?? el.name.text;
+          const elIsTypeOnly = isTypeOnlyImportSpecifier(ts, el);
+          const elKind: GraphEdgeKind =
+            kind === 'type' ? 'type' : elIsTypeOnly ? 'type' : kind;
           tunnels.push({
             specifier: spec,
             kind: elKind,
-            identifiers: [el.name],
+            exportName,
           });
         }
       }
-
-      if (identifiers.length)
-        tunnels.push({ specifier: spec, kind, identifiers });
     }
 
     if (ts.isExportDeclaration(stmt) && stmt.moduleSpecifier) {
       if (!isStringLiteralLike(ts, stmt.moduleSpecifier)) continue;
-      const kind: GraphEdgeKind = stmt.isTypeOnly ? 'type' : 'runtime';
+      const kind: GraphEdgeKind = isTypeOnlyExportDeclaration(ts, stmt)
+        ? 'type'
+        : 'runtime';
       explicit.push({ specifier: stmt.moduleSpecifier.text, kind });
     }
 
@@ -115,22 +145,16 @@ export const extractFromSourceFile = (args: {
     if (ts.isCallExpression(n)) {
       // import('x')
       if (n.expression.kind === ts.SyntaxKind.ImportKeyword) {
-        if (
-          n.arguments.length >= 1 &&
-          isStringLiteralLike(ts, n.arguments[0])
-        ) {
-          const arg = n.arguments[0];
+        const arg = n.arguments.at(0);
+        if (arg && isStringLiteralLike(ts, arg)) {
           explicit.push({ specifier: arg.text, kind: 'dynamic' });
         }
       }
 
       // require('x')
       if (ts.isIdentifier(n.expression) && n.expression.text === 'require') {
-        if (
-          n.arguments.length >= 1 &&
-          isStringLiteralLike(ts, n.arguments[0])
-        ) {
-          const arg = n.arguments[0];
+        const arg = n.arguments.at(0);
+        if (arg && isStringLiteralLike(ts, arg)) {
           explicit.push({
             specifier: arg.text,
             kind: functionDepth > 0 ? 'dynamic' : 'runtime',

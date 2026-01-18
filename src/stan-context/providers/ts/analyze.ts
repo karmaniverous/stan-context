@@ -14,7 +14,10 @@ import { absPathToNodeId, toPosixPath } from '../../core/paths';
 import type { GraphEdge, GraphNode, NodeId } from '../../types';
 import { extractFromSourceFile } from './extract';
 import { resolveModuleSpecifier } from './moduleResolution';
-import { filterCommanderRule, getDeclarationFilesForImport } from './tunnel';
+import {
+  filterCommanderRule,
+  getDeclarationFilesForExportName,
+} from './tunnel';
 
 const isNodeModulesPath = (absPath: string): boolean =>
   toPosixPath(absPath).includes('/node_modules/');
@@ -38,6 +41,7 @@ const ensureNode = async (args: {
       return existing;
     }
   }
+
   const created = await makeHashedFileNode({
     absPath: args.absPath,
     cwd: args.cwd,
@@ -78,7 +82,7 @@ export const analyzeTypeScript = async (args: {
   const nodes: Record<NodeId, GraphNode> = { ...args.baseNodes };
   const edgesBySource: Record<NodeId, GraphEdge[]> = {};
 
-  const rootAbs = args.universeSourceIds.map((id) => path.join(cwd, id));
+  const rootAbs = args.universeSourceIds.map((id) => path.resolve(cwd, id));
   const host = ts.createCompilerHost(args.compilerOptions, true);
   host.getCurrentDirectory = () => cwd;
 
@@ -90,8 +94,8 @@ export const analyzeTypeScript = async (args: {
   const checker = program.getTypeChecker();
 
   for (const sourceId of args.dirtySourceIds) {
-    const abs = path.join(cwd, sourceId);
-    const sf = program.getSourceFile(abs);
+    const abs = path.resolve(cwd, sourceId);
+    const sf = program.getSourceFile(path.normalize(abs));
     if (!sf) continue;
 
     const { explicit, tunnels } = extractFromSourceFile({ ts, sourceFile: sf });
@@ -158,10 +162,14 @@ export const analyzeTypeScript = async (args: {
 
       if (resolved.kind !== 'file') continue;
 
-      const decls = getDeclarationFilesForImport({
+      const moduleSf = program.getSourceFile(path.normalize(resolved.absPath));
+      if (!moduleSf) continue;
+
+      const decls = getDeclarationFilesForExportName({
         ts,
         checker,
-        identifiers: t.identifiers,
+        moduleSourceFile: moduleSf,
+        exportName: t.exportName,
       });
 
       const barrelIsExternal =

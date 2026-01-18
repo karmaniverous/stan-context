@@ -100,3 +100,4 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 - Fixed strict lint/typecheck issues after TS provider wiring.
 - Switched package boundary detection to package-directory.
 - Improved tunneling to follow re-exports and pass tests.
+- Removed deprecated isTypeOnly usage; fixed tunneling via export lookup.
