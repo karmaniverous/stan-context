@@ -5,9 +5,10 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 ## Next up
 
 - Establish source scaffolding (provider model)
-  - Create core modules under `src/core/` (types, paths, hashing, Universe scan, incremental planner, merge/serialize).
-  - Create provider interfaces under `src/providers/` and a TypeScript provider under `src/providers/ts/`.
-  - Re-export the public API from `src/index.ts`.
+  - Add the TypeScript provider implementation (edge extraction, resolution, tunneling, commander rule).
+  - Add incremental planning (dirty set + reverse deps closure, including re-hashing previous external/source nodes).
+  - Wire incremental reuse: copy previousGraph nodes/edges for non-dirty sources.
+  - Add tests for tunneling, commander rule, and incremental invalidation.
 - Implement Universe scan (core)
   - Discover files with `fast-glob` (POSIX-normalized repo-relative paths).
   - Apply selection in a deterministic order:
@@ -90,4 +91,6 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 ## Completed
 
 - Captured clarified graph schema, invariants, and implementation plan (requirements + todo).
-- Removed stan-core template identity from repo metadata/docs/config.- Moved implementation watch-outs to stan.project.md.
+- Removed stan-core template identity from repo metadata/docs/config.
+- Moved implementation watch-outs to stan.project.md.
+- Implemented Universe scan + nodes-only graph scaffold with tests.
