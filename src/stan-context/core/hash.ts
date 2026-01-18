@@ -24,3 +24,13 @@ export const hashFileSha256 = async (absPath: string): Promise<FileHash> => {
 
   return { size: st.size, hash: h.digest('hex') };
 };
+
+export const tryHashFileSha256 = async (
+  absPath: string,
+): Promise<FileHash | null> => {
+  try {
+    return await hashFileSha256(absPath);
+  } catch {
+    return null;
+  }
+};

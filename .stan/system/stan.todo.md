@@ -74,19 +74,19 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
   - Each `edges[source]` array is de-duplicated and sorted.
   - Node metadata is sparse; when present, metadata keys are ordered deterministically (`hash`, `isOutsideRoot`, `size`).
 - Proposed module boundaries (keep each file < 300 LOC)
-  - `src/core/types.ts` — graph schema types (NodeId, GraphNode, GraphEdge, DependencyGraph, result types)
-  - `src/core/paths.ts` — POSIX normalization + NodeId helpers (`isOutsideRoot`, repo-relative vs absolute)
-  - `src/core/hash.ts` — size + SHA-256 helpers (no caching; deterministic)
-  - `src/core/universe.ts` — glob + ignore + config selection → Universe file list
-  - `src/core/incremental.ts` — dirty-set computation using `previousGraph`
-  - `src/core/merge.ts` — merge + de-dup + sorting + “complete edges map”
-  - `src/providers/types.ts` — provider interfaces/types
-  - `src/providers/ts/tsconfig.ts` — load compilerOptions (only)
-  - `src/providers/ts/program.ts` — createProgram + compiler host helpers
-  - `src/providers/ts/imports.ts` — extract explicit dependencies + edge kind classification
-  - `src/providers/ts/resolve.ts` — resolve specifiers → NodeId/kind (builtin/external/source/missing)
-  - `src/providers/ts/tunnel.ts` — barrel tunneling (symbol-aware; excludes namespace imports)
-  - `src/providers/ts/externals.ts` — commander rule (package boundary walk)
+  - `src/stan-context/types.ts` — graph schema types + helpers
+  - `src/stan-context/core/paths.ts` — POSIX normalization + NodeId helpers
+  - `src/stan-context/core/hash.ts` — size + SHA-256 helpers
+  - `src/stan-context/core/universe.ts` — glob + ignore + config selection
+  - `src/stan-context/core/incremental.ts` — dirty-set computation using `previousGraph`
+  - `src/stan-context/core/finalize.ts` — merge/de-dup/sort + “complete edges map”
+  - `src/stan-context/providers/ts/load.ts` — optional TS loader (no dynamic import)
+  - `src/stan-context/providers/ts/tsconfig.ts` — load compilerOptions (only)
+  - `src/stan-context/providers/ts/moduleResolution.ts` — resolve specifiers (builtin/missing/file)
+  - `src/stan-context/providers/ts/extract.ts` — extract explicit deps + tunnel requests
+  - `src/stan-context/providers/ts/packageRoot.ts` — nearest package.json boundary helper
+  - `src/stan-context/providers/ts/tunnel.ts` — symbol-aware tunneling + commander boundary filter
+  - `src/stan-context/providers/ts/analyze.ts` — analyze dirty sources and emit nodes/edges
 
 ## Completed
 
@@ -94,4 +94,5 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 - Removed stan-core template identity from repo metadata/docs/config.
 - Moved implementation watch-outs to stan.project.md.
 - Implemented Universe scan + nodes-only graph scaffold with tests.
-- Replaced dynamic import TS loader; fixed parse/lint warnings.- Adopted TSDoc escaping policy; fixed comment escapes.
+- Replaced dynamic import TS loader; fixed parse/lint warnings.
+- Adopted TSDoc escaping policy; fixed comment escapes.

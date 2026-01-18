@@ -9,9 +9,12 @@
 import path from 'node:path';
 
 import { finalizeGraph } from './core/finalize';
+import { planIncremental } from './core/incremental';
 import { makeHashedFileNode } from './core/nodes';
 import { scanUniverseFiles } from './core/universe';
+import { analyzeTypeScript } from './providers/ts/analyze';
 import { tryLoadTypeScript } from './providers/ts/load';
+import { loadCompilerOptions } from './providers/ts/tsconfig';
 import type {
   DependencyGraph,
   GraphNode,
@@ -19,6 +22,17 @@ import type {
   GraphResult,
   NodeId,
 } from './types';
+
+const isAnalyzableSource = (id: string): boolean => {
+  const lower = id.toLowerCase();
+  return (
+    lower.endsWith('.d.ts') ||
+    lower.endsWith('.ts') ||
+    lower.endsWith('.tsx') ||
+    lower.endsWith('.js') ||
+    lower.endsWith('.jsx')
+  );
+};
 
 const emptyEdgesMap = (nodes: Record<NodeId, unknown>): Record<NodeId, []> => {
   const out: Record<NodeId, []> = {};
@@ -33,12 +47,32 @@ export const generateDependencyGraph = async (
   const cwd = opts.cwd;
 
   const universeIds = await scanUniverseFiles({ cwd, config: opts.config });
+  const analyzableSourceIds = universeIds.filter(isAnalyzableSource);
 
-  const nodes: Record<NodeId, GraphNode> = {};
+  const currentNodes: Record<NodeId, GraphNode> = {};
   for (const id of universeIds) {
     const absPath = path.join(cwd, id);
-    nodes[id] = await makeHashedFileNode({ absPath, cwd, kind: 'source' });
+    currentNodes[id] = await makeHashedFileNode({
+      absPath,
+      cwd,
+      kind: 'source',
+    });
   }
+
+  const inc = await planIncremental({
+    cwd,
+    analyzableSourceIds,
+    currentNodes,
+    previousGraph: opts.previousGraph,
+  });
+
+  const baseNodes: Record<NodeId, GraphNode> = {
+    ...inc.carriedNodes,
+    ...currentNodes,
+  };
+  const edgesBase: Record<NodeId, import('./types').GraphEdge[]> = {
+    ...inc.reusedEdgesBySource,
+  };
 
   // Attempt to load TypeScript. If missing, return nodes-only graph.
   const ts = tryLoadTypeScript();
@@ -47,25 +81,48 @@ export const generateDependencyGraph = async (
       'typescript peer dependency not found; returning nodes-only graph',
     );
     const graph: DependencyGraph = finalizeGraph({
-      nodes,
-      edges: emptyEdgesMap(nodes),
+      nodes: baseNodes,
+      edges: edgesBase,
     });
     return {
       graph,
-      stats: { modules: Object.keys(graph.nodes).length, edges: 0, dirty: 0 },
+      stats: {
+        modules: Object.keys(graph.nodes).length,
+        edges: Object.values(graph.edges).reduce((n, es) => n + es.length, 0),
+        dirty: inc.dirtySourceIds.size,
+      },
       errors,
     };
   }
-  void ts;
 
-  // TODO (next dev-plan step): TypeScript provider analysis + incrementalism.
-  const graph: DependencyGraph = finalizeGraph({
-    nodes,
-    edges: emptyEdgesMap(nodes),
+  const compilerOptions = loadCompilerOptions({ ts, cwd });
+
+  const analyzed = await analyzeTypeScript({
+    ts,
+    cwd,
+    compilerOptions,
+    universeSourceIds: analyzableSourceIds,
+    dirtySourceIds: inc.dirtySourceIds,
+    baseNodes,
   });
+
+  const mergedEdges: Record<NodeId, import('./types').GraphEdge[]> = {
+    ...edgesBase,
+    ...analyzed.edgesBySource,
+  };
+
+  const graph: DependencyGraph = finalizeGraph({
+    nodes: analyzed.nodes,
+    edges: mergedEdges,
+  });
+
   return {
     graph,
-    stats: { modules: Object.keys(graph.nodes).length, edges: 0, dirty: 0 },
-    errors,
+    stats: {
+      modules: Object.keys(graph.nodes).length,
+      edges: Object.values(graph.edges).reduce((n, es) => n + es.length, 0),
+      dirty: inc.dirtySourceIds.size,
+    },
+    errors: [...errors, ...analyzed.errors],
   };
 };
