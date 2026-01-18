@@ -4,7 +4,7 @@ title: Contributing — Dev Quickstart
 
 # Contributing — Dev Quickstart
 
-Thanks for helping improve STAN! This project follows a services‑first, test‑first philosophy. Here’s how to get started locally.
+Thanks for helping improve `@karmaniverous/stan-context`! This project follows a services‑first, test‑first philosophy. Here’s how to get started locally.
 
 ## Setup
 Prereqs:
@@ -13,8 +13,8 @@ Prereqs:
 
 Clone and install:
 ```bash
-git clone https://github.com/karmaniverous/stan-core.git
-cd stan
+git clone https://github.com/karmaniverous/stan-context.git
+cd stan-context
 npm i
 ```
 

@@ -10,17 +10,12 @@
     "url": "https://github.com/karmaniverous/stan-context/issues"
   },
   "dependencies": {
-    "diff": "^8.0.2",
     "fast-glob": "^3.3.3",
-    "fs-extra": "^11.3.2",
     "glob-parent": "^6.0.2",
     "ignore": "^7.0.5",
-    "package-directory": "^8.1.0",
-    "picomatch": "^4.0.3",
-    "yaml": "^2.8.1",
-    "zod": "^4.1.12"
+    "picomatch": "^4.0.3"
   },
-  "description": "Engine for STAN — programmatic archiving/diffing/snapshotting, patch application, config loading, selection, and imports staging. No CLI/TTY concerns.",
+  "description": "Context compiler for STAN — scan a repo and produce a deterministic dependency graph for LLM-driven file selection.",
   "devDependencies": {
     "@dotenvx/dotenvx": "^1.51.0",
     "@eslint/js": "^9.38.0",
@@ -45,7 +40,6 @@
     "eslint-plugin-prettier": "^5.5.4",
     "eslint-plugin-simple-import-sort": "^12.1.1",
     "eslint-plugin-tsdoc": "^0.4.0",
-    "happy-dom": "^20.0.8",
     "jsonc-eslint-parser": "^2.4.1",
     "knip": "^5.66.2",
     "lefthook": "^2.0.0",
@@ -83,16 +77,13 @@
     "dist"
   ],
   "keywords": [
-    "engine",
     "library",
     "ai-assisted-development",
-    "snapshot",
-    "archive",
-    "tar",
-    "unified-diff",
-    "patch",
-    "code-review",
     "context",
+    "dependency-graph",
+    "graph",
+    "imports",
+    "typescript",
     "typescript"
   ],
   "license": "BSD-3-Clause",

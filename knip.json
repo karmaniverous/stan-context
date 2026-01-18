@@ -1,14 +1,7 @@
 {
   "entry": ["src/**/index.ts"],
   "ignoreDependencies": ["@types/eslint-config-prettier", "cross-env"],
-  "ignore": [
-    "src/test/helpers.ts",
-    "src/stan/patch/context.ts",
-    "src/stan/patch/detect.ts",
-    "src/stan/patch/git-status.ts",
-    "src/stan/patch/headers.ts",
-    "src/stan/patch/util/fs.ts"
-  ],
+  "ignore": ["src/test/**"],
   "project": ["*/**", "!docs/**"],
   "rules": {
     "exports": "off",

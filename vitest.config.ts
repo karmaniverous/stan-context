@@ -13,7 +13,7 @@ export default defineConfig({
   },
   test: {
     globals: true,
-    environment: 'happy-dom',
+    environment: 'node',
     exclude: ['node_modules/**', 'dist/**', '.rollup.cache/**'],
     coverage: {
       provider: 'v8',
@@ -23,14 +23,7 @@ export default defineConfig({
         'src/**/*.test.ts',
         'src/test/**',
         '**/*.d.ts',
-        // Exclude trivial barrels and types-only modules from coverage noise
         'src/index.ts',
-        'src/stan/index.ts',
-        'src/stan/config/index.ts',
-        'src/stan/run/index.ts',
-        'src/stan/patch/index.ts',
-        'src/stan/config/types.ts',
-        'src/stan/run/types.ts',
       ],
     },
     reporters: [
@@ -40,10 +33,6 @@ export default defineConfig({
           summary: false,
         },
       ],
-    ],
-    setupFiles: [
-      resolve(rootDir, 'src/test/setup.ts'),
-      resolve(rootDir, 'src/test/mock-tar.ts'),
     ],
     testTimeout: 15000,
     hookTimeout: 10000,

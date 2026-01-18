@@ -5,7 +5,7 @@ import jsonPlugin from '@rollup/plugin-json';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import terserPlugin from '@rollup/plugin-terser';
 import typescriptPlugin from '@rollup/plugin-typescript';
-import fs from 'fs-extra';
+import { access, copyFile, mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import { builtinModules } from 'node:module';
 import { fileURLToPath } from 'node:url';
@@ -32,12 +32,23 @@ const nodeExternals = new Set([
   ...builtinModules.map((m) => `node:${m}`),
 ]);
 
-// Runtime deps that must not be bundled (rely on package assets / fallbacks)
+// Runtime + peer deps to keep external (library build).
 const externalPkgs = new Set<string>([
-  'clipboardy', // requires platform fallback binaries at runtime; bundling breaks resolution
-  // fs-extra is a runtime dependency; keep external to avoid bundling its internals.
-  'fs-extra',
+  'fast-glob',
+  'glob-parent',
+  'ignore',
+  'picomatch',
+  'typescript',
 ]);
+
+const pathExists = async (p: string): Promise<boolean> => {
+  try {
+    await access(p);
+    return true;
+  } catch {
+    return false;
+  }
+};
 
 const copyDocsPlugin = (dest: string): Plugin => {
   return {
@@ -51,9 +62,9 @@ const copyDocsPlugin = (dest: string): Plugin => {
         },
       ];
       try {
-        await fs.ensureDir(dest);
+        await mkdir(dest, { recursive: true });
         for (const c of candidates) {
-          if (await fs.pathExists(c.src)) await fs.copyFile(c.src, c.dest);
+          if (await pathExists(c.src)) await copyFile(c.src, c.dest);
         }
       } catch {
         // best-effort

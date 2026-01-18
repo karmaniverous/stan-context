@@ -96,3 +96,4 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 ## Completed
 
 - Captured clarified graph schema, invariants, and implementation plan (requirements + todo).
+- Removed stan-core template identity from repo metadata/docs/config.
