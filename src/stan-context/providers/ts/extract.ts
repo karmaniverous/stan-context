@@ -8,7 +8,7 @@ export type ExplicitImport = {
 export type TunnelRequest = {
   specifier: string;
   kind: GraphEdgeKind;
-  exportName: string;
+  identifiers: import('typescript').Identifier[];
 };
 
 const isTypeOnlyImportSpecifier = (
@@ -99,19 +99,18 @@ export const extractFromSourceFile = (args: {
       }
 
       if (clause.name) {
-        // Default import tunnels to the module's "default" export.
-        tunnels.push({ specifier: spec, kind, exportName: 'default' });
+        // Tunnel default import using the importer-side binding.
+        tunnels.push({ specifier: spec, kind, identifiers: [clause.name] });
       }
       if (clause.namedBindings && ts.isNamedImports(clause.namedBindings)) {
         for (const el of clause.namedBindings.elements) {
-          const exportName = el.propertyName?.text ?? el.name.text;
           const elIsTypeOnly = isTypeOnlyImportSpecifier(ts, el);
           const elKind: GraphEdgeKind =
             kind === 'type' ? 'type' : elIsTypeOnly ? 'type' : kind;
           tunnels.push({
             specifier: spec,
             kind: elKind,
-            exportName,
+            identifiers: [el.name],
           });
         }
       }

@@ -98,38 +98,25 @@ const getModuleSymbol = (args: {
   return args.checker.getSymbolAtLocation(args.moduleSourceFile) ?? null;
 };
 
-export const getDeclarationFilesForExportName = (args: {
+export const getDeclarationFilesForImportedIdentifiers = (args: {
   ts: typeof import('typescript');
   checker: import('typescript').TypeChecker;
-  moduleSourceFile: import('typescript').SourceFile;
-  exportName: string;
+  identifiers: import('typescript').Identifier[];
 }): string[] => {
-  const mod = getModuleSymbol({
-    ts: args.ts,
-    checker: args.checker,
-    moduleSourceFile: args.moduleSourceFile,
-  });
-  if (!mod) return [];
-
-  let exports: import('typescript').Symbol[] = [];
-  try {
-    exports = args.checker.getExportsOfModule(mod);
-  } catch {
-    return [];
-  }
-
-  const name = args.exportName;
-  const sym = exports.find((s) => s.getName() === name);
-  if (!sym) return [];
-
   const out = new Set<string>();
-  addDeclarationFiles({
-    ts: args.ts,
-    checker: args.checker,
-    symbol: sym,
-    out,
-    seenSymbols: new Set<import('typescript').Symbol>(),
-  });
+  const seenSymbols = new Set<import('typescript').Symbol>();
+
+  for (const ident of args.identifiers) {
+    const sym = args.checker.getSymbolAtLocation(ident);
+    if (!sym) continue;
+    addDeclarationFiles({
+      ts: args.ts,
+      checker: args.checker,
+      symbol: sym,
+      out,
+      seenSymbols,
+    });
+  }
 
   return Array.from(out);
 };

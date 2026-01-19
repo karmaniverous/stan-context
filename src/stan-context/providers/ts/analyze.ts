@@ -16,7 +16,7 @@ import { extractFromSourceFile } from './extract';
 import { resolveModuleSpecifier } from './moduleResolution';
 import {
   filterCommanderRule,
-  getDeclarationFilesForExportName,
+  getDeclarationFilesForImportedIdentifiers,
 } from './tunnel';
 
 const isNodeModulesPath = (absPath: string): boolean =>
@@ -179,14 +179,10 @@ export const analyzeTypeScript = async (args: {
 
       if (resolved.kind !== 'file') continue;
 
-      const moduleSf = getProgramSourceFile(resolved.absPath);
-      if (!moduleSf) continue;
-
-      const decls = getDeclarationFilesForExportName({
+      const decls = getDeclarationFilesForImportedIdentifiers({
         ts,
         checker,
-        moduleSourceFile: moduleSf,
-        exportName: t.exportName,
+        identifiers: t.identifiers,
       });
 
       const barrelIsExternal =
