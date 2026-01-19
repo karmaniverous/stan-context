@@ -1,4 +1,20 @@
 {
+  "name": "@karmaniverous/stan-context",
+  "description": "Deterministic dependency graph generator for STAN (LLM context selection).",
+  "keywords": [
+    "stan",
+    "stan-context",
+    "context",
+    "context-engineering",
+    "dependency-graph",
+    "module-graph",
+    "import-analysis",
+    "static-analysis",
+    "typescript",
+    "typescript-compiler-api",
+    "llm",
+    "ai-assisted-development"
+  ],
   "peerDependencies": {
     "typescript": ">=5"
   },
@@ -23,7 +39,6 @@
     "package-directory": "^8.1.0",
     "picomatch": "^4.0.3"
   },
-  "description": "Context compiler for STAN — scan a repo and produce a deterministic dependency graph for LLM-driven file selection.",
   "devDependencies": {
     "@dotenvx/dotenvx": "^1.51.0",
     "@eslint/js": "^9.38.0",
@@ -67,33 +82,15 @@
   },
   "exports": {
     ".": {
-      "import": {
-        "types": "./dist/types/index.d.ts",
-        "default": "./dist/mjs/index.js"
-      },
-      "require": {
-        "types": "./dist/types/index.d.ts",
-        "default": "./dist/cjs/index.js"
-      }
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/mjs/index.js"
     }
   },
   "files": [
     "dist"
   ],
-  "keywords": [
-    "library",
-    "ai-assisted-development",
-    "context",
-    "dependency-graph",
-    "graph",
-    "imports",
-    "typescript",
-    "typescript"
-  ],
   "license": "BSD-3-Clause",
-  "main": "dist/cjs/index.js",
-  "module": "dist/mjs/index.js",
-  "name": "@karmaniverous/stan-context",
+  "main": "dist/mjs/index.js",
   "publishConfig": {
     "access": "public"
   },
@@ -145,6 +142,6 @@
     "typecheck": "tsc"
   },
   "type": "module",
-  "types": "dist/index.d.ts",
+  "types": "dist/types/index.d.ts",
   "version": "0.0.0"
 }

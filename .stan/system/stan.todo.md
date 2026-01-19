@@ -4,7 +4,9 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 
 ## Next up
 
-- Maintenance
+- Package metadata and publishing
+  - Refresh `package.json` description and keywords.
+  - Make the package ESM-only (no CJS exports/entrypoints).
   - Re-run `npm run docs -- --emit none` and confirm 0 warnings.
 
 ## Design snapshot (keep in sync while implementing)
@@ -61,4 +63,6 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 - Added incremental planning tests for dirty propagation.
 - Added stan-context assistant guide.
 - Cleaned up Next up after suite went green.
-- Removed unused deps and exported referenced graph types.- Exported remaining graph types to satisfy TypeDoc.
+- Removed unused deps and exported referenced graph types.
+- Exported remaining graph types to satisfy TypeDoc.
+- Updated package metadata and moved to ESM-only packaging.

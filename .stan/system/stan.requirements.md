@@ -252,4 +252,15 @@ export type GraphResult = {
 export function generateDependencyGraph(
   opts: GraphOptions,
 ): Promise<GraphResult>;
-```
+```
+
+## Packaging and module system
+
+- `@karmaniverous/stan-context` MUST be ESM-only.
+  - Package metadata MUST NOT provide a CommonJS entrypoint (`exports["."].require`).
+  - The `main` entry (if present) MUST point to an ESM build output.
+- Distribution outputs:
+  - Runtime JS MUST be emitted as ESM (e.g., `dist/mjs/**`).
+  - Types MUST be emitted (e.g., `dist/types/**`).
+- Consumers that use `require()` are out of scope (they should receive an
+  “exports not defined” / ESM-only failure).
