@@ -1,9 +1,9 @@
 import ts from 'typescript';
 
-import {
-  createReexportTraversalCache,
-  resolveDefiningExportsForName,
-} from './reexportTraversal';
+import traversal from './reexportTraversal';
+
+const { createReexportTraversalCache, resolveDefiningExportsForName } =
+  traversal;
 
 const sf = (fileName: string, body: string): ts.SourceFile =>
   ts.createSourceFile(fileName, body, ts.ScriptTarget.ES2022, true);

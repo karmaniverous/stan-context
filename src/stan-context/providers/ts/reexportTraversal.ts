@@ -245,3 +245,12 @@ export const resolveDefiningExportsForName = (args: {
 
   return visit(entrySourceFile, args.exportName, new Set<string>());
 };
+
+/**
+ * Default export is provided as an SSR-stable namespace for tests.
+ * Named exports remain the primary API for production code.
+ */
+export default {
+  createReexportTraversalCache,
+  resolveDefiningExportsForName,
+};

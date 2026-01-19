@@ -115,3 +115,4 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 - Implemented AST-first re-export traversal service + unit tests.
 - Fixed traversal typing and external `.d.ts` parsing fallback.
 - Fixed lint-only name checks in re-export traversal.
+- Stabilized traversal unit tests under Vitest SSR.
