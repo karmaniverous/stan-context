@@ -9,6 +9,8 @@
 
 import path from 'node:path';
 
+import type * as tsLib from 'typescript';
+
 import { makeHashedFileNode, makeNode } from '../../core/nodes';
 import { absPathToNodeId, toPosixPath } from '../../core/paths';
 import type { GraphEdge, GraphNode, NodeId } from '../../types';
@@ -16,7 +18,7 @@ import { extractFromSourceFile } from './extract';
 import { resolveModuleSpecifier } from './moduleResolution';
 import {
   filterCommanderRule,
-  getDeclarationFilesForImportedIdentifiers,
+  getDeclarationFilesForBarrelExportNames,
 } from './tunnel';
 
 const isNodeModulesPath = (absPath: string): boolean =>
@@ -65,9 +67,9 @@ const ensureMissingNode = (nodes: Record<NodeId, GraphNode>, id: string) => {
 };
 
 export const analyzeTypeScript = async (args: {
-  ts: typeof import('typescript');
+  ts: typeof tsLib;
   cwd: string;
-  compilerOptions: import('typescript').CompilerOptions;
+  compilerOptions: tsLib.CompilerOptions;
   universeSourceIds: NodeId[];
   dirtySourceIds: Set<NodeId>;
   baseNodes: Record<NodeId, GraphNode>;
@@ -95,7 +97,7 @@ export const analyzeTypeScript = async (args: {
 
   const getProgramSourceFile = (
     absPath: string,
-  ): import('typescript').SourceFile | undefined => {
+  ): tsLib.SourceFile | undefined => {
     const resolved = path.resolve(absPath);
     const candidates = [
       absPath,
@@ -179,10 +181,14 @@ export const analyzeTypeScript = async (args: {
 
       if (resolved.kind !== 'file') continue;
 
-      const decls = getDeclarationFilesForImportedIdentifiers({
+      const barrelSf = getProgramSourceFile(resolved.absPath);
+      if (!barrelSf) continue;
+
+      const decls = getDeclarationFilesForBarrelExportNames({
         ts,
         checker,
-        identifiers: t.identifiers,
+        barrelSourceFile: barrelSf,
+        exportNames: [t.exportName],
       });
 
       const barrelIsExternal =

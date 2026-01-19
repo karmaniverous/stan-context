@@ -112,3 +112,4 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 - Fixed re-export tunneling via ExportSpecifier symbols.
 - Switched tunneling to importer-side symbol resolution.
 - Fixed re-export tunneling to follow ExportSpecifier targets.
+- Switched tunneling to barrel export-name lookup.

@@ -4,6 +4,7 @@
  *   named/default imports.
  * - Re-export barrels must be followed for both runtime and type exports:
  *   `export { X } from './x'` and `export type { X } from './x'`.
+ * - `export * from './x'` must participate in tunneling for named imports.
  * - External “commander rule” boundary filtering remains caller-controlled.
  */
 import path from 'node:path';
@@ -150,20 +151,76 @@ const addDeclarationFiles = (args: {
       }
     }
 
+    // If this is an `export * from './x'` style declaration, attempt to resolve
+    // the current symbol name from the target module and recurse.
+    if (args.ts.isExportDeclaration(d) && d.moduleSpecifier) {
+      const moduleSym = args.checker.getSymbolAtLocation(d.moduleSpecifier);
+      if (moduleSym) {
+        const resolvedModule = resolveAliasChain({
+          ts: args.ts,
+          checker: args.checker,
+          symbol: moduleSym,
+        });
+        try {
+          const exports = args.checker.getExportsOfModule(resolvedModule);
+          const byName = exports.find(
+            (s) => s.getName() === resolved.getName(),
+          );
+          if (byName) {
+            addDeclarationFiles({
+              ts: args.ts,
+              checker: args.checker,
+              symbol: byName,
+              out: args.out,
+              seenSymbols: args.seenSymbols,
+            });
+            continue;
+          }
+        } catch {
+          // ignore; fall back to recording this declaration's source file
+        }
+      }
+    }
+
     args.out.add(d.getSourceFile().fileName);
   }
 };
 
-export const getDeclarationFilesForImportedIdentifiers = (args: {
+const getModuleSymbolForSourceFile = (args: {
   ts: typeof tsLib;
   checker: tsLib.TypeChecker;
-  identifiers: tsLib.Identifier[];
+  sourceFile: tsLib.SourceFile;
+}): tsLib.Symbol | null => {
+  const sym = args.checker.getSymbolAtLocation(args.sourceFile);
+  if (!sym) return null;
+  return resolveAliasChain({ ts: args.ts, checker: args.checker, symbol: sym });
+};
+
+export const getDeclarationFilesForBarrelExportNames = (args: {
+  ts: typeof tsLib;
+  checker: tsLib.TypeChecker;
+  barrelSourceFile: tsLib.SourceFile;
+  exportNames: string[];
 }): string[] => {
   const out = new Set<string>();
   const seenSymbols = new Set<tsLib.Symbol>();
 
-  for (const ident of args.identifiers) {
-    const sym = args.checker.getSymbolAtLocation(ident);
+  const moduleSym = getModuleSymbolForSourceFile({
+    ts: args.ts,
+    checker: args.checker,
+    sourceFile: args.barrelSourceFile,
+  });
+  if (!moduleSym) return [];
+
+  let exports: tsLib.Symbol[] = [];
+  try {
+    exports = args.checker.getExportsOfModule(moduleSym);
+  } catch {
+    return [];
+  }
+
+  for (const name of args.exportNames) {
+    const sym = exports.find((s) => s.getName() === name);
     if (!sym) continue;
     addDeclarationFiles({
       ts: args.ts,
