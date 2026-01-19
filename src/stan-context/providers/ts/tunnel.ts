@@ -31,6 +31,20 @@ const resolveAliasChain = (args: {
   return cur;
 };
 
+const getExportSpecifierTargetSymbol = (args: {
+  checker: import('typescript').TypeChecker;
+  spec: import('typescript').ExportSpecifier;
+}): import('typescript').Symbol | null => {
+  // For re-exports (`export { X } from './mod'`) the symbol is usually attached
+  // to the export specifier name. This is the reliable path to follow.
+  const viaName = args.checker.getSymbolAtLocation(args.spec.name);
+  if (viaName) return viaName;
+  const viaProp = args.spec.propertyName
+    ? args.checker.getSymbolAtLocation(args.spec.propertyName)
+    : undefined;
+  return viaProp ?? null;
+};
+
 const addDeclarationFiles = (args: {
   ts: typeof import('typescript');
   checker: import('typescript').TypeChecker;
@@ -49,10 +63,13 @@ const addDeclarationFiles = (args: {
 
   const decls = resolved.getDeclarations() ?? [];
   for (const d of decls) {
-    // If this is a re-export specifier, follow the local target symbol so we
-    // tunnel to the file that actually defines the symbol.
+    // If this is an export specifier (including re-exports), follow its target
+    // symbol so we tunnel to the file that actually defines the symbol.
     if (args.ts.isExportSpecifier(d)) {
-      const target = args.checker.getExportSpecifierLocalTargetSymbol(d);
+      const target = getExportSpecifierTargetSymbol({
+        checker: args.checker,
+        spec: d,
+      });
       if (target) {
         addDeclarationFiles({
           ts: args.ts,

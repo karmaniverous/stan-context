@@ -103,3 +103,4 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 - Removed deprecated isTypeOnly usage; fixed tunneling via export lookup.
 - Fixed Vitest mock leakage by isolating TS loader mocks.
 - Fixed TS program SourceFile lookup for tunneling on Windows.
+- Fixed re-export tunneling via ExportSpecifier symbols.
