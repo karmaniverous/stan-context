@@ -189,6 +189,16 @@ export const analyzeTypeScript = async (args: {
         checker,
         barrelSourceFile: barrelSf,
         exportNames: [t.exportName],
+        resolveAbsPath: (fromAbsPath, specifier) => {
+          const r = resolveModuleSpecifier({
+            ts,
+            fromAbsPath,
+            specifier,
+            compilerOptions: args.compilerOptions,
+          });
+          return r.kind === 'file' ? r.absPath : null;
+        },
+        getSourceFile: (absPath) => getProgramSourceFile(absPath),
       });
 
       const barrelIsExternal =
