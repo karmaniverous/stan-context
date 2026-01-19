@@ -74,12 +74,11 @@ const getModuleSymbol = (args: {
   checker: import('typescript').TypeChecker;
   moduleSourceFile: import('typescript').SourceFile;
 }): import('typescript').Symbol | null => {
-  const sym = args.checker.getSymbolAtLocation(args.moduleSourceFile);
-  if (sym) return sym;
   const anySf = args.moduleSourceFile as unknown as { symbol?: unknown };
-  if (anySf.symbol && typeof anySf.symbol === 'object')
+  if (anySf.symbol && typeof anySf.symbol === 'object') {
     return anySf.symbol as import('typescript').Symbol;
-  return null;
+  }
+  return args.checker.getSymbolAtLocation(args.moduleSourceFile) ?? null;
 };
 
 export const getDeclarationFilesForExportName = (args: {

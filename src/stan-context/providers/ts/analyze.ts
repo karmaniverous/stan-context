@@ -93,9 +93,26 @@ export const analyzeTypeScript = async (args: {
   });
   const checker = program.getTypeChecker();
 
+  const getProgramSourceFile = (
+    absPath: string,
+  ): import('typescript').SourceFile | undefined => {
+    const resolved = path.resolve(absPath);
+    const candidates = [
+      absPath,
+      resolved,
+      toPosixPath(absPath),
+      toPosixPath(resolved),
+    ];
+    for (const c of candidates) {
+      const sf = program.getSourceFile(c);
+      if (sf) return sf;
+    }
+    return undefined;
+  };
+
   for (const sourceId of args.dirtySourceIds) {
     const abs = path.resolve(cwd, sourceId);
-    const sf = program.getSourceFile(path.normalize(abs));
+    const sf = getProgramSourceFile(abs);
     if (!sf) continue;
 
     const { explicit, tunnels } = extractFromSourceFile({ ts, sourceFile: sf });
@@ -162,7 +179,7 @@ export const analyzeTypeScript = async (args: {
 
       if (resolved.kind !== 'file') continue;
 
-      const moduleSf = program.getSourceFile(path.normalize(resolved.absPath));
+      const moduleSf = getProgramSourceFile(resolved.absPath);
       if (!moduleSf) continue;
 
       const decls = getDeclarationFilesForExportName({
