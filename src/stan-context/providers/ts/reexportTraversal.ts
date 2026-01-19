@@ -65,9 +65,9 @@ const collectLocalTopLevelDeclarationNames = (args: {
   for (const s of sourceFile.statements) {
     if (ts.isFunctionDeclaration(s) && s.name) names.add(s.name.text);
     if (ts.isClassDeclaration(s) && s.name) names.add(s.name.text);
-    if (ts.isInterfaceDeclaration(s) && s.name) names.add(s.name.text);
-    if (ts.isTypeAliasDeclaration(s) && s.name) names.add(s.name.text);
-    if (ts.isEnumDeclaration(s) && s.name) names.add(s.name.text);
+    if (ts.isInterfaceDeclaration(s)) names.add(s.name.text);
+    if (ts.isTypeAliasDeclaration(s)) names.add(s.name.text);
+    if (ts.isEnumDeclaration(s)) names.add(s.name.text);
     if (ts.isModuleDeclaration(s) && ts.isIdentifier(s.name))
       names.add(s.name.text);
     if (ts.isVariableStatement(s)) {
