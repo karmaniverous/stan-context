@@ -4,64 +4,12 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 
 ## Next up
 
-- Establish source scaffolding (provider model)
-  - Stabilize the TS provider implementation under strict linting rules:
-    - Avoid deprecated TS AST properties (use `phaseModifier`-based detection).
-    - Use `hasOwnProperty` guards when reading `Record<...>` maps across graph instances.
-  - Add incremental-specific tests:
-    - dirty includes reverse deps closure
-    - external hash changes cause dependent re-analysis
-- Implement Universe scan (core)
-  - Discover files with `fast-glob` (POSIX-normalized repo-relative paths).
-  - Apply selection in a deterministic order:
-    - `.gitignore` filtering (baseline)
-    - `includes` (re-include even if gitignored; can also re-include `node_modules/**`)
-    - `excludes` (deny; highest precedence)
-    - `anchors` (high-precedence allow; may override excludes + gitignore, but not implicit `.git/**`).
-  - Always apply implicit exclusions:
-    - `.git/**` (hard)
-    - `node_modules/**` (hard unless explicitly re-included)
-  - Emit `source` nodes for every file in the Universe with `metadata.size` + `metadata.hash`.
-- Implement incremental planning (core)
-  - Compare current `nodes` hashes against `previousGraph` to detect changed/new/deleted.
-  - Build an in-memory reverse-dependency index by inverting `previousGraph.edges`.
-  - Compute `dirty` = changed ∪ reverseDeps(changed) (vital for barrel tunneling correctness).
-- Implement TypeScript provider (ts/js)
-  - Load `compilerOptions` from `tsconfig.json` (ignore tsconfig include/exclude for file selection).
-  - Create a Program with Universe-supported files as `rootNames` (`.ts/.tsx/.js/.jsx/.d.ts`).
-  - For each dirty file:
-    - Extract explicit edges (static imports/exports, top-level `require`, and `import()` as `dynamic`).
-    - Resolve each target to a NodeId and kind (`source`/`external`/`builtin`/`missing`).
-    - Hash any resolved `external` files (and mark `isOutsideRoot` when physical path is outside `cwd`).
-    - Perform barrel tunneling for named/default imports (explicit edge to barrel + implicit edge(s) to defining file(s)).
-    - Do not tunnel namespace imports (`import * as Ns`).
-  - Implement external “Commander rule”
-    - Shallow resolution by default (entry point only).
-    - Follow re-exports within the same nearest-`package.json` boundary.
-- Merge and finalize graph (core)
-  - Merge provider output into the base Universe graph.
-  - Ensure `graph.edges` contains a key for every `graph.nodes` key (empty `[]` when none).
-  - De-duplicate edges by `(source, target, kind, resolution)`.
-  - Sort edges deterministically (target, then kind, then resolution).
-  - Serialize deterministically (sorted node keys; stable metadata key ordering when present).
-- Tests (Vitest)
-  - Universe scan precedence (gitignore/includes/excludes/anchors + implicit exclusions).
-  - NodeId normalization (POSIX separators; Windows drive paths `C:\...` → `C:/...`).
-  - Node kind behavior:
-    - builtin normalization (`fs` → `node:fs`)
-    - missing specifier produces `kind: 'missing'` with no metadata
-    - outside-root resolved node sets `metadata.isOutsideRoot: true`
-  - Provider behavior:
-    - JSON import emits an edge when TS resolves it
-    - barrel tunneling (named/default + `export *`; multi-declaration merges → multiple implicit edges)
-    - namespace import does not tunnel
-    - external commander rule follows within package boundary only
-  - Incrementalism:
-    - dirty includes reverse deps
-    - external hash changes cause dependent re-analysis
-  - No-TypeScript mode: nodes-only graph + stable warning in `errors`
+- Incrementalism
+  - Add tests for `planIncremental`:
+    - dirty includes transitive reverse-deps closure
+    - external hash changes mark dependent sources dirty
 - Documentation
-  - Add `guides/stan-assistant-guide.md` for stan-context once the public API and module layout are in place.
+  - Add `guides/stan-assistant-guide.md` (usage contract) for stan-context.
 
 ## Design snapshot (keep in sync while implementing)
 
@@ -113,3 +61,5 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 - Fixed lint-only name checks in re-export traversal.
 - Stabilized traversal unit tests under Vitest SSR.
 - Validated lint/typecheck/test are green after tunneling work.
+- Cleaned up Next up to reflect current state.
+- Added incremental planning tests for dirty propagation.
