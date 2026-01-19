@@ -5,8 +5,7 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 ## Next up
 
 - Maintenance
-  - Re-run TypeDoc and confirm the “referenced but not included” warnings are resolved.
-  - Re-run `knip` and confirm the unused dependency list is empty (or document why any remain).
+  - Re-run `npm run docs -- --emit none` and confirm 0 warnings.
 
 ## Design snapshot (keep in sync while implementing)
 
@@ -62,4 +61,4 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 - Added incremental planning tests for dirty propagation.
 - Added stan-context assistant guide.
 - Cleaned up Next up after suite went green.
-- Removed unused deps and exported referenced graph types.
+- Removed unused deps and exported referenced graph types.- Exported remaining graph types to satisfy TypeDoc.
