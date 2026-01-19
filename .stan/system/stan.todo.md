@@ -4,10 +4,6 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 
 ## Next up
 
-- Validate suite is green after AST-first tunneling work
-  - `npm run lint`
-  - `npm run typecheck`
-  - `npm run test`
 - Establish source scaffolding (provider model)
   - Stabilize the TS provider implementation under strict linting rules:
     - Avoid deprecated TS AST properties (use `phaseModifier`-based detection).
@@ -115,4 +111,5 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 - Implemented AST-first re-export traversal service + unit tests.
 - Fixed traversal typing and external `.d.ts` parsing fallback.
 - Fixed lint-only name checks in re-export traversal.
-- Stabilized traversal unit tests under Vitest SSR.
+- Stabilized traversal unit tests under Vitest SSR.
+- Validated lint/typecheck/test are green after tunneling work.
