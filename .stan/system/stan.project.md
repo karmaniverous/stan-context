@@ -22,6 +22,12 @@ Requirements belong in `.stan/system/stan.requirements.md`. Work tracking belong
 - Allowed exception (compelling):
   - Optional peer dependency loading (e.g., TypeScript). Prefer `createRequire` + `require()` with a small, isolated loader module and clear comments.
 
+## TypeScript type reference style
+
+- Avoid the `import('typescript').X` type-query style in code where practical.
+- Prefer `import type ... from 'typescript'` / `import type * as ...` patterns for readability and to avoid confusion with dynamic imports.
+- Exception: if the type-query form is the least-bad option to preserve optional TS runtime behavior, keep it tightly scoped and documented.
+
 ## Testing defaults
 
 - Default Vitest environment is `node`.

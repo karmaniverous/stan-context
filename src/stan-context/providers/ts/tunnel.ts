@@ -31,18 +31,37 @@ const resolveAliasChain = (args: {
   return cur;
 };
 
-const getExportSpecifierTargetSymbol = (args: {
+const getExportedSymbolFromReexport = (args: {
+  ts: typeof import('typescript');
   checker: import('typescript').TypeChecker;
   spec: import('typescript').ExportSpecifier;
 }): import('typescript').Symbol | null => {
-  // For re-exports (`export { X } from './mod'`) the symbol is usually attached
-  // to the export specifier name. This is the reliable path to follow.
-  const viaName = args.checker.getSymbolAtLocation(args.spec.name);
-  if (viaName) return viaName;
-  const viaProp = args.spec.propertyName
-    ? args.checker.getSymbolAtLocation(args.spec.propertyName)
-    : undefined;
-  return viaProp ?? null;
+  const name = args.spec.propertyName?.text ?? args.spec.name.text;
+
+  const named = args.spec.parent;
+  const exportDecl = named.parent;
+  if (!args.ts.isExportDeclaration(exportDecl) || !exportDecl.moduleSpecifier)
+    return null;
+
+  const moduleSym = args.checker.getSymbolAtLocation(
+    exportDecl.moduleSpecifier,
+  );
+  if (!moduleSym) return null;
+
+  const resolvedModule = resolveAliasChain({
+    ts: args.ts,
+    checker: args.checker,
+    symbol: moduleSym,
+  });
+
+  let exports: import('typescript').Symbol[] = [];
+  try {
+    exports = args.checker.getExportsOfModule(resolvedModule);
+  } catch {
+    return null;
+  }
+
+  return exports.find((s) => s.getName() === name) ?? null;
 };
 
 const addDeclarationFiles = (args: {
@@ -66,7 +85,8 @@ const addDeclarationFiles = (args: {
     // If this is an export specifier (including re-exports), follow its target
     // symbol so we tunnel to the file that actually defines the symbol.
     if (args.ts.isExportSpecifier(d)) {
-      const target = getExportSpecifierTargetSymbol({
+      const target = getExportedSymbolFromReexport({
+        ts: args.ts,
         checker: args.checker,
         spec: d,
       });
@@ -84,18 +104,6 @@ const addDeclarationFiles = (args: {
 
     args.out.add(d.getSourceFile().fileName);
   }
-};
-
-const getModuleSymbol = (args: {
-  ts: typeof import('typescript');
-  checker: import('typescript').TypeChecker;
-  moduleSourceFile: import('typescript').SourceFile;
-}): import('typescript').Symbol | null => {
-  const anySf = args.moduleSourceFile as unknown as { symbol?: unknown };
-  if (anySf.symbol && typeof anySf.symbol === 'object') {
-    return anySf.symbol as import('typescript').Symbol;
-  }
-  return args.checker.getSymbolAtLocation(args.moduleSourceFile) ?? null;
 };
 
 export const getDeclarationFilesForImportedIdentifiers = (args: {
