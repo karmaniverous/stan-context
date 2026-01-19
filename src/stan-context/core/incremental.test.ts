@@ -1,9 +1,17 @@
+/**
+ * Requirements addressed:
+ * - Incremental planning MUST mark dirty sources as the transitive reverse-deps
+ *   closure of changed nodes.
+ * - Changes to external nodes MUST invalidate dependent sources so tunneling
+ *   stays correct across package entrypoints (“commander rule” scenarios).
+ */
+
 import path from 'node:path';
 
 import { withTempDir, writeFile } from '../../test/temp';
+import type { DependencyGraph, GraphEdge, GraphNode, NodeId } from '../types';
 import { planIncremental } from './incremental';
 import { makeHashedFileNode } from './nodes';
-import type { DependencyGraph, GraphEdge, GraphNode, NodeId } from '../types';
 
 const edge = (target: NodeId): GraphEdge => ({
   target,
@@ -78,7 +86,11 @@ describe('planIncremental', () => {
       );
 
       const prevUse = await hashed(cwd, 'use.ts', 'source');
-      const prevExt = await hashed(cwd, 'node_modules/pkg/index.d.ts', 'external');
+      const prevExt = await hashed(
+        cwd,
+        'node_modules/pkg/index.d.ts',
+        'external',
+      );
 
       const prevGraph: DependencyGraph = {
         nodes: {
@@ -97,3 +109,22 @@ describe('planIncremental', () => {
         cwd,
         'node_modules/pkg/index.d.ts',
         `export interface A { a: string; v: 2 }\n`,
+      );
+
+      const curUse = await hashed(cwd, 'use.ts', 'source');
+      const currentNodes: Record<NodeId, GraphNode> = {
+        [curUse.id]: curUse,
+      };
+
+      const plan = await planIncremental({
+        cwd,
+        analyzableSourceIds: [curUse.id],
+        currentNodes,
+        previousGraph: prevGraph,
+      });
+
+      expect(plan.changedNodeIds.has(prevExt.id)).toBe(true);
+      expect(plan.dirtySourceIds.has(curUse.id)).toBe(true);
+    });
+  });
+});

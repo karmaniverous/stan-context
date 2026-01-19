@@ -5,9 +5,10 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 ## Next up
 
 - Incrementalism
-  - Add tests for `planIncremental`:
-    - dirty includes transitive reverse-deps closure
-    - external hash changes mark dependent sources dirty
+  - Fix `src/stan-context/core/incremental.test.ts` parse error and re-run:
+    - `npm run lint`
+    - `npm run typecheck`
+    - `npm run test`
 - Documentation
   - Add `guides/stan-assistant-guide.md` (usage contract) for stan-context.
 
