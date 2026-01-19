@@ -121,7 +121,7 @@
       ]
     },
     "npm": {
-      "publish": false
+      "publish": true
     }
   },
   "repository": {
