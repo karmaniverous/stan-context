@@ -4,13 +4,9 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 
 ## Next up
 
-- Incrementalism
-  - Fix `src/stan-context/core/incremental.test.ts` parse error and re-run:
-    - `npm run lint`
-    - `npm run typecheck`
-    - `npm run test`
-- Documentation
-  - Add `guides/stan-assistant-guide.md` (usage contract) for stan-context.
+- Maintenance
+  - Re-run TypeDoc and confirm the “referenced but not included” warnings are resolved.
+  - Re-run `knip` and confirm the unused dependency list is empty (or document why any remain).
 
 ## Design snapshot (keep in sync while implementing)
 
@@ -65,3 +61,5 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 - Cleaned up Next up to reflect current state.
 - Added incremental planning tests for dirty propagation.
 - Added stan-context assistant guide.
+- Cleaned up Next up after suite went green.
+- Removed unused deps and exported referenced graph types.
