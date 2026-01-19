@@ -177,6 +177,29 @@ JSON imports:
 - `export * from` MUST participate in tunneling.
 - Namespace imports (`import * as Ns from ...`) MUST NOT be tunneled; keep only the explicit edge to the barrel.
 
+#### Re-export resolution strategy (robustness requirement)
+
+Re-export barrels are primarily a *syntactic forwarding graph* (e.g.,
+`export { X } from './x'`, `export type { X } from './x'`, `export * from './x'`).
+To avoid brittle behavior across TypeScript versions and `.d.ts` externals, the
+TS provider MUST implement tunneling through re-exports using an AST-first
+strategy:
+
+- For named re-exports (`export { X } from './x'` and `export type { X } from './x'`):
+  - Treat the `moduleSpecifier` and exported-name mapping as the primary source
+    of truth.
+  - Follow the forwarding chain deterministically (barrel → target module →
+    next re-export, etc.) until reaching a defining module.
+- For star re-exports (`export * from './x'`):
+  - Use a focused lookup to determine whether the target module exports the
+    requested name, then recurse into that module.
+  - The TypeChecker MAY be used for this membership check, but it SHOULD be
+    limited in scope and memoized/cached to avoid creating a fragile “symbol
+    chase” dependency.
+- Symbol/alias chasing via the TypeChecker MUST NOT be the primary mechanism
+  for resolving re-export chains (it is acceptable only as a fallback for
+  “defining declaration files” once the correct target module is identified).
+
 ### External dependencies (“Commander rule”)
 
 - Default external behavior is shallow:
@@ -185,8 +208,7 @@ JSON imports:
   - If the external entry point is a barrel that re-exports from files within the same package, follow those re-exports and include those internal package files as external nodes/edges.
   - Boundary: “same package” is defined by nearest `package.json`. Stop when re-exports cross into a different nearest-`package.json` context.
 - Workspace/monorepo linking:
-  - If a resolved dependency is physically within the repo root and is not under `node_modules/**`, treat it as `source`.
-
+  - If a resolved dependency is physically within the repo root and is not under `node_modules/**`, treat it as `source`.
 ## Incrementalism (previousGraph)
 
 - `generateDependencyGraph` accepts `previousGraph` for incremental rebuilds.
