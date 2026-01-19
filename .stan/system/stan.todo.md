@@ -4,18 +4,17 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 
 ## Next up
 
+- Run tests and confirm the tunneling suite passes
+  - If `generateDependencyGraph` mock regression reappears, harden the Vitest mock shape for `./providers/ts/load` (ESM-safe exports).
 - Fix regression: `generateDependencyGraph` export becomes non-callable
   - Investigate `generateDependencyGraph.test.ts` failure:
     - `TypeError: generateDependencyGraph is not a function`
-  - Likely causes to check first: Vitest module reset + mocking order around the
-    TS loader module.
+  - Likely causes to check first: Vitest module reset + mocking order around the TS loader module.
 - Fix TS provider tunneling for re-export barrels (robust approach)
   - Implement AST-first re-export traversal (forwarding graph):
     - Named re-exports: `export { X } from './x'` and `export type { X } from './x'`
     - Star re-exports: `export * from './x'` with a focused membership check
-  - Use the TypeChecker only as a secondary aid (e.g., membership checks for
-    `export *` and final “defining declaration files” extraction), not as the
-    primary mechanism for chasing re-export chains.
+  - Use the TypeChecker only as a secondary aid (e.g., membership checks for `export *` and final “defining declaration files” extraction), not as the primary mechanism for chasing re-export chains.
   - Keep the commander-rule package-boundary filter applied only for external barrels.
 - Establish source scaffolding (provider model)
   - Stabilize the TS provider implementation under strict linting rules:
@@ -119,4 +118,7 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 - Fixed re-export tunneling via ExportSpecifier symbols.
 - Switched tunneling to importer-side symbol resolution.
 - Fixed re-export tunneling to follow ExportSpecifier targets.
-- Switched tunneling to barrel export-name lookup.- Chose AST-first re-export traversal; recorded in requirements.
+- Switched tunneling to barrel export-name lookup.
+- Chose AST-first re-export traversal; recorded in requirements.
+- Implemented AST-first re-export traversal service + unit tests.
+- Fixed traversal typing and external `.d.ts` parsing fallback.

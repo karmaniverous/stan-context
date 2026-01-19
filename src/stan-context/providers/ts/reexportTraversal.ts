@@ -45,23 +45,14 @@ const moduleExportNameToText = (
   ts: typeof tsLib,
   n: tsLib.ModuleExportName,
 ): string => {
-  if (ts.isIdentifier(n)) return n.text;
-  if (isStringLiteralLike(ts, n)) return n.text;
-  // Best-effort fallback; should be rare.
-  return n.getText();
+  // ModuleExportName is Identifier | StringLiteral.
+  return ts.isIdentifier(n) ? n.text : n.text;
 };
 
 const hasExportModifier = (ts: typeof tsLib, n: tsLib.Node): boolean => {
-  const mods = (n as unknown as { modifiers?: readonly tsLib.ModifierLike[] })
-    .modifiers;
-  return (
-    Array.isArray(mods) &&
-    mods.some((m) => m.kind === ts.SyntaxKind.ExportKeyword)
-  );
-};
-
-const addDeclName = (out: Set<string>, name: tsLib.BindingName) => {
-  if ((name as tsLib.Identifier).text) out.add((name as tsLib.Identifier).text);
+  if (!ts.canHaveModifiers(n)) return false;
+  const mods = ts.getModifiers(n);
+  return mods?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword) ?? false;
 };
 
 const collectLocalTopLevelDeclarationNames = (args: {
@@ -82,7 +73,7 @@ const collectLocalTopLevelDeclarationNames = (args: {
     if (ts.isVariableStatement(s)) {
       for (const d of s.declarationList.declarations) {
         // Only handle simple identifier declarations.
-        if (ts.isIdentifier(d.name)) addDeclName(names, d.name);
+        if (ts.isIdentifier(d.name)) names.add(d.name.text);
       }
     }
   }

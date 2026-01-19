@@ -112,6 +112,27 @@ export const analyzeTypeScript = async (args: {
     return undefined;
   };
 
+  // AST-first traversal sometimes needs to read external `.d.ts` files that the
+  // Program may not have loaded as SourceFiles. For traversal, a best-effort
+  // parse is sufficient; we cache these to avoid repeated reads.
+  const parsedSourceFileCache = new Map<string, tsLib.SourceFile>();
+  const getAnySourceFile = (absPath: string): tsLib.SourceFile | undefined => {
+    const sf = getProgramSourceFile(absPath);
+    if (sf) return sf;
+    const cached = parsedSourceFileCache.get(absPath);
+    if (cached) return cached;
+    const body = ts.sys.readFile(absPath);
+    if (typeof body !== 'string') return undefined;
+    const created = ts.createSourceFile(
+      absPath,
+      body,
+      ts.ScriptTarget.ES2022,
+      true,
+    );
+    parsedSourceFileCache.set(absPath, created);
+    return created;
+  };
+
   for (const sourceId of args.dirtySourceIds) {
     const abs = path.resolve(cwd, sourceId);
     const sf = getProgramSourceFile(abs);
@@ -181,7 +202,7 @@ export const analyzeTypeScript = async (args: {
 
       if (resolved.kind !== 'file') continue;
 
-      const barrelSf = getProgramSourceFile(resolved.absPath);
+      const barrelSf = getAnySourceFile(resolved.absPath);
       if (!barrelSf) continue;
 
       const decls = getDeclarationFilesForBarrelExportNames({
@@ -198,7 +219,7 @@ export const analyzeTypeScript = async (args: {
           });
           return r.kind === 'file' ? r.absPath : null;
         },
-        getSourceFile: (absPath) => getProgramSourceFile(absPath),
+        getSourceFile: (absPath) => getAnySourceFile(absPath),
       });
 
       const barrelIsExternal =
