@@ -6,7 +6,7 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 
 - Package metadata and publishing
   - Refresh `package.json` description and keywords.
-  - Make the package ESM-only (no CJS exports/entrypoints).
+  - Re-run `npm run build` and confirm the build emits only `dist/mjs/**` and `dist/types/**`.
   - Re-run `npm run docs -- --emit none` and confirm 0 warnings.
 
 ## Design snapshot (keep in sync while implementing)
@@ -66,3 +66,4 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 - Removed unused deps and exported referenced graph types.
 - Exported remaining graph types to satisfy TypeDoc.
 - Updated package metadata and moved to ESM-only packaging.
+- Removed Rollup CJS output (ESM-only build).

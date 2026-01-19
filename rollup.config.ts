@@ -1,6 +1,5 @@
 /** See <stanPath>/system/stan.project.md for global requirements. */
 import aliasPlugin, { type Alias } from '@rollup/plugin-alias';
-import commonjsPlugin from '@rollup/plugin-commonjs';
 import jsonPlugin from '@rollup/plugin-json';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import terserPlugin from '@rollup/plugin-terser';
@@ -77,7 +76,6 @@ const makePlugins = (minify: boolean, extras: Plugin[] = []): Plugin[] => {
   const base: Plugin[] = [
     alias,
     nodeResolve({ exportConditions: ['node', 'module', 'default'] }),
-    commonjsPlugin(),
     jsonPlugin(),
     typescriptPlugin(),
     ...extras,
@@ -102,13 +100,12 @@ const commonInputOptions = (
     Array.from(externalPkgs).some((p) => id === p || id.startsWith(`${p}/`)),
 });
 
-const outCommon = (dest: string): OutputOptions[] => [
+const outEsmOnly = (dest: string): OutputOptions[] => [
   { dir: `${dest}/mjs`, format: 'esm', sourcemap: false },
-  { dir: `${dest}/cjs`, format: 'cjs', sourcemap: false },
 ];
 export const buildLibrary = (dest: string): RollupOptions => ({
   input: 'src/index.ts',
-  output: outCommon(dest),
+  output: outEsmOnly(dest),
   ...commonInputOptions(
     true,
     // Copy docs once from library config
