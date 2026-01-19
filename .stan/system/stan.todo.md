@@ -64,3 +64,4 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 - Validated lint/typecheck/test are green after tunneling work.
 - Cleaned up Next up to reflect current state.
 - Added incremental planning tests for dirty propagation.
+- Added stan-context assistant guide.
