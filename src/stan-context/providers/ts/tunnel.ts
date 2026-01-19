@@ -43,9 +43,8 @@ const resolveAliasChain = (args: {
 const getExportedFromName = (spec: tsLib.ExportSpecifier): string =>
   spec.propertyName?.text ?? spec.name.text;
 
-const getSpecifierLookupNode = (
-  spec: tsLib.ExportSpecifier,
-): tsLib.Identifier => spec.propertyName ?? spec.name;
+const getSpecifierLookupNode = (spec: tsLib.ExportSpecifier): tsLib.Node =>
+  spec.propertyName ?? spec.name;
 
 const resolveExportSpecifierTargetSymbol = (args: {
   ts: typeof tsLib;
@@ -60,6 +59,25 @@ const resolveExportSpecifierTargetSymbol = (args: {
     checker,
     symbol: args.fromSymbol,
   });
+
+  // Preferred (when available): use the checker’s dedicated helper for
+  // ExportSpecifiers. This tends to be the most reliable way to resolve
+  // `export { X } from './x'` and `export type { X } from './x'`.
+  const viaApi = (
+    checker as unknown as {
+      getExportSpecifierLocalTargetSymbol?: (
+        spec: tsLib.ExportSpecifier,
+      ) => tsLib.Symbol | undefined;
+    }
+  ).getExportSpecifierLocalTargetSymbol?.(spec);
+  if (viaApi) {
+    const viaApiResolved = resolveAliasChain({
+      ts,
+      checker,
+      symbol: viaApi,
+    });
+    if (viaApiResolved !== fromResolved) return viaApi;
+  }
 
   // Preferred: ask the checker for the symbol at the specifier name/property.
   // For `export { X } from './x'`, this often resolves directly to X (or an

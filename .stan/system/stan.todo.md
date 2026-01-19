@@ -4,6 +4,12 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 
 ## Next up
 
+- Fix TS provider tunneling for re-export barrels (current test failures)
+  - Ensure `ExportSpecifier` declarations resolve to the defining file(s) for:
+    - `export { X } from './x'`
+    - `export type { X } from './x'`
+  - Keep the commander-rule package-boundary filter applied only for external
+    barrels.
 - Establish source scaffolding (provider model)
   - Stabilize the TS provider implementation under strict linting rules:
     - Avoid deprecated TS AST properties (use `phaseModifier`-based detection).
