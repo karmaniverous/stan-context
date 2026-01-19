@@ -1,6 +1,15 @@
+/**
+ * Requirements addressed:
+ * - Barrel tunneling must emit implicit edges to the defining module(s) for
+ *   named/default imports.
+ * - Re-export barrels must be followed for both runtime and type exports:
+ *   `export { X } from './x'` and `export type { X } from './x'`.
+ * - External “commander rule” boundary filtering remains caller-controlled.
+ */
 import path from 'node:path';
 
 import { packageDirectorySync } from 'package-directory';
+import type * as tsLib from 'typescript';
 
 const packageRootCache = new Map<string, string | null>();
 
@@ -15,12 +24,12 @@ const findNearestPackageRoot = (absFile: string): string | null => {
 };
 
 const resolveAliasChain = (args: {
-  ts: typeof import('typescript');
-  checker: import('typescript').TypeChecker;
-  symbol: import('typescript').Symbol;
-}): import('typescript').Symbol => {
+  ts: typeof tsLib;
+  checker: tsLib.TypeChecker;
+  symbol: tsLib.Symbol;
+}): tsLib.Symbol => {
   let cur = args.symbol;
-  const seen = new Set<import('typescript').Symbol>();
+  const seen = new Set<tsLib.Symbol>();
   while (cur.flags & args.ts.SymbolFlags.Alias) {
     if (seen.has(cur)) break;
     seen.add(cur);
@@ -31,45 +40,65 @@ const resolveAliasChain = (args: {
   return cur;
 };
 
-const getExportedSymbolFromReexport = (args: {
-  ts: typeof import('typescript');
-  checker: import('typescript').TypeChecker;
-  spec: import('typescript').ExportSpecifier;
-}): import('typescript').Symbol | null => {
-  const name = args.spec.propertyName?.text ?? args.spec.name.text;
+const getExportedFromName = (spec: tsLib.ExportSpecifier): string =>
+  spec.propertyName?.text ?? spec.name.text;
 
-  const named = args.spec.parent;
-  const exportDecl = named.parent;
-  if (!args.ts.isExportDeclaration(exportDecl) || !exportDecl.moduleSpecifier)
-    return null;
+const getSpecifierLookupNode = (
+  spec: tsLib.ExportSpecifier,
+): tsLib.Identifier => spec.propertyName ?? spec.name;
 
-  const moduleSym = args.checker.getSymbolAtLocation(
-    exportDecl.moduleSpecifier,
-  );
-  if (!moduleSym) return null;
+const resolveExportSpecifierTargetSymbol = (args: {
+  ts: typeof tsLib;
+  checker: tsLib.TypeChecker;
+  spec: tsLib.ExportSpecifier;
+  fromSymbol: tsLib.Symbol;
+}): tsLib.Symbol | null => {
+  const { ts, checker, spec } = args;
 
-  const resolvedModule = resolveAliasChain({
-    ts: args.ts,
-    checker: args.checker,
-    symbol: moduleSym,
+  const fromResolved = resolveAliasChain({
+    ts,
+    checker,
+    symbol: args.fromSymbol,
   });
 
-  let exports: import('typescript').Symbol[] = [];
+  // Preferred: ask the checker for the symbol at the specifier name/property.
+  // For `export { X } from './x'`, this often resolves directly to X (or an
+  // alias of X) in the target module.
+  const direct = checker.getSymbolAtLocation(getSpecifierLookupNode(spec));
+  if (direct) {
+    const directResolved = resolveAliasChain({ ts, checker, symbol: direct });
+    if (directResolved !== fromResolved) return direct;
+  }
+
+  // Fallback: when we only have an ExportSpecifier declaration, follow the
+  // enclosing `export ... from '<module>'` into the target module’s exports.
+  const named = spec.parent;
+  const exportDecl = named.parent;
+  if (!ts.isExportDeclaration(exportDecl) || !exportDecl.moduleSpecifier)
+    return null;
+
+  const moduleSym = checker.getSymbolAtLocation(exportDecl.moduleSpecifier);
+  if (!moduleSym) return null;
+
+  const resolvedModule = resolveAliasChain({ ts, checker, symbol: moduleSym });
+
+  let exports: tsLib.Symbol[] = [];
   try {
-    exports = args.checker.getExportsOfModule(resolvedModule);
+    exports = checker.getExportsOfModule(resolvedModule);
   } catch {
     return null;
   }
 
+  const name = getExportedFromName(spec);
   return exports.find((s) => s.getName() === name) ?? null;
 };
 
 const addDeclarationFiles = (args: {
-  ts: typeof import('typescript');
-  checker: import('typescript').TypeChecker;
-  symbol: import('typescript').Symbol;
+  ts: typeof tsLib;
+  checker: tsLib.TypeChecker;
+  symbol: tsLib.Symbol;
   out: Set<string>;
-  seenSymbols: Set<import('typescript').Symbol>;
+  seenSymbols: Set<tsLib.Symbol>;
 }): void => {
   const resolved = resolveAliasChain({
     ts: args.ts,
@@ -85,10 +114,11 @@ const addDeclarationFiles = (args: {
     // If this is an export specifier (including re-exports), follow its target
     // symbol so we tunnel to the file that actually defines the symbol.
     if (args.ts.isExportSpecifier(d)) {
-      const target = getExportedSymbolFromReexport({
+      const target = resolveExportSpecifierTargetSymbol({
         ts: args.ts,
         checker: args.checker,
         spec: d,
+        fromSymbol: resolved,
       });
       if (target) {
         addDeclarationFiles({
@@ -107,12 +137,12 @@ const addDeclarationFiles = (args: {
 };
 
 export const getDeclarationFilesForImportedIdentifiers = (args: {
-  ts: typeof import('typescript');
-  checker: import('typescript').TypeChecker;
-  identifiers: import('typescript').Identifier[];
+  ts: typeof tsLib;
+  checker: tsLib.TypeChecker;
+  identifiers: tsLib.Identifier[];
 }): string[] => {
   const out = new Set<string>();
-  const seenSymbols = new Set<import('typescript').Symbol>();
+  const seenSymbols = new Set<tsLib.Symbol>();
 
   for (const ident of args.identifiers) {
     const sym = args.checker.getSymbolAtLocation(ident);
