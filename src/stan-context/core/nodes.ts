@@ -12,7 +12,7 @@ import type {
   GraphNodeMetadata,
   NodeId,
 } from '../types';
-import { inferLanguageFromPath } from '../types';
+import * as types from '../types';
 import { hashFileSha256 } from './hash';
 import { absPathToNodeId } from './paths';
 
@@ -52,7 +52,7 @@ export const makeHashedFileNode = async (args: {
 }): Promise<GraphNode> => {
   const { id, isOutsideRoot } = absPathToNodeId(args.absPath, args.cwd);
   const { size, hash } = await hashFileSha256(args.absPath);
-  const language = inferLanguageFromPath(id);
+  const language = types.inferLanguageFromPath(id);
   return makeNode({
     id,
     kind: args.kind,

@@ -1,6 +1,6 @@
 /**
  * Requirements addressed:
- * - Public API: generateDependencyGraph(opts) => { graph, stats, errors }.
+ * - Public API: generateDependencyGraph(opts) =\> \{ graph, stats, errors \}.
  * - Universe scan defines source nodes (with size + sha256 hash).
  * - Graceful degradation when TypeScript peer dependency is missing:
  *   return a nodes-only graph with complete empty edges map.

@@ -11,11 +11,11 @@ export const capErrors = (errors: string[], maxErrors: number): string[] => {
   if (max === 0) return [];
   if (errors.length <= max) return errors;
 
-  if (max === 1) return [`errors truncated: ${errors.length} total`];
+  if (max === 1) return [`errors truncated: ${String(errors.length)} total`];
 
   const shown = max - 1;
   return [
     ...errors.slice(0, shown),
-    `errors truncated: showing ${shown} of ${errors.length}`,
+    `errors truncated: showing ${String(shown)} of ${String(errors.length)}`,
   ];
 };

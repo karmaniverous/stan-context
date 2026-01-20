@@ -4,10 +4,9 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 
 ## Next up
 
-- Package metadata and publishing
-  - Refresh `package.json` description and keywords.
-  - Re-run `npm run build` and confirm the build emits only `dist/mjs/**` and `dist/types/**`.
-  - Re-run `npm run docs -- --emit none` and confirm 0 warnings.
+- Validate node descriptions + SSR stability
+  - Re-run `npm run lint` and confirm 0 errors.
+  - Re-run `npm run test` and confirm green.
 
 ## Design snapshot (keep in sync while implementing)
 
@@ -68,3 +67,4 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 - Updated package metadata and moved to ESM-only packaging.
 - Removed Rollup CJS output (ESM-only build).
 - Added GraphNode.description and maxErrors option.
+- Fixed lint and Vitest SSR issues after adding descriptions.

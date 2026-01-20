@@ -16,10 +16,7 @@ import { absPathToNodeId, toPosixPath } from '../../core/paths';
 import type { GraphEdge, GraphNode, NodeId } from '../../types';
 import { extractFromSourceFile } from './extract';
 import { resolveModuleSpecifier } from './moduleResolution';
-import {
-  filterCommanderRule,
-  getDeclarationFilesForBarrelExportNames,
-} from './tunnel';
+import * as tunnel from './tunnel';
 
 const isNodeModulesPath = (absPath: string): boolean =>
   toPosixPath(absPath).includes('/node_modules/');
@@ -205,7 +202,7 @@ export const analyzeTypeScript = async (args: {
       const barrelSf = getAnySourceFile(resolved.absPath);
       if (!barrelSf) continue;
 
-      const decls = getDeclarationFilesForBarrelExportNames({
+      const decls = tunnel.getDeclarationFilesForBarrelExportNames({
         ts,
         checker,
         barrelSourceFile: barrelSf,
@@ -226,7 +223,7 @@ export const analyzeTypeScript = async (args: {
         resolved.isExternalLibraryImport || isNodeModulesPath(resolved.absPath);
 
       const filtered = barrelIsExternal
-        ? filterCommanderRule({
+        ? tunnel.filterCommanderRule({
             barrelAbsPath: resolved.absPath,
             declarationAbsPaths: decls,
           })

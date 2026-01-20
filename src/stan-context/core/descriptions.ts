@@ -57,7 +57,8 @@ export const applyNodeDescriptions = async (args: {
 
     if (typeof n.description === 'string') {
       // Remove an existing description when it no longer resolves.
-      const { description: _omit, ...rest } = n;
+      const rest: GraphNode = { ...n };
+      delete rest.description;
       out[id] = rest;
     }
   }
