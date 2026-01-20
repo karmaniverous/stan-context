@@ -104,7 +104,10 @@ const outEsmOnly = (dest: string): OutputOptions[] => [
   { dir: `${dest}/mjs`, format: 'esm', sourcemap: false },
 ];
 export const buildLibrary = (dest: string): RollupOptions => ({
-  input: 'src/index.ts',
+  input: {
+    index: 'src/index.ts',
+    eslint: 'src/eslint/index.ts',
+  },
   output: outEsmOnly(dest),
   ...commonInputOptions(
     true,
@@ -114,7 +117,10 @@ export const buildLibrary = (dest: string): RollupOptions => ({
 });
 
 export const buildTypes = (dest: string): RollupOptions => ({
-  input: 'src/index.ts',
+  input: {
+    index: 'src/index.ts',
+    eslint: 'src/eslint/index.ts',
+  },
   output: [{ dir: `${dest}/types`, format: 'esm' }],
   // Ensure alias resolution works during type bundling to avoid unresolved "@/..." warnings.
   plugins: [alias, dtsPlugin()],

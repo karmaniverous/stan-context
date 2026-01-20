@@ -83,6 +83,10 @@
     ".": {
       "types": "./dist/types/index.d.ts",
       "import": "./dist/mjs/index.js"
+    },
+    "./eslint": {
+      "types": "./dist/types/eslint.d.ts",
+      "import": "./dist/mjs/eslint.js"
     }
   },
   "files": [

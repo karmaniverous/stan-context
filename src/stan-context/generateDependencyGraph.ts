@@ -31,6 +31,7 @@ import type {
 
 const DEFAULT_NODE_DESCRIPTION_LIMIT = 160;
 const DEFAULT_MAX_ERRORS = 50;
+const DEFAULT_NODE_DESCRIPTION_TAGS = ['module', 'packageDocumentation'] as const;
 
 const isAnalyzableSource = (id: string): boolean => {
   const lower = id.toLowerCase();
@@ -53,6 +54,11 @@ export const generateDependencyGraph = async (
     typeof opts.nodeDescriptionLimit === 'number'
       ? opts.nodeDescriptionLimit
       : DEFAULT_NODE_DESCRIPTION_LIMIT;
+
+  const nodeDescriptionTags =
+    opts.nodeDescriptionTags && opts.nodeDescriptionTags.length
+      ? opts.nodeDescriptionTags
+      : Array.from(DEFAULT_NODE_DESCRIPTION_TAGS);
 
   const maxErrors =
     typeof opts.maxErrors === 'number' ? opts.maxErrors : DEFAULT_MAX_ERRORS;
@@ -96,7 +102,11 @@ export const generateDependencyGraph = async (
       cwd,
       nodes: baseNodes,
       nodeDescriptionLimit,
-      describeSourceText: describeTsJsModule,
+      describeSourceText: (a) =>
+        describeTsJsModule({
+          ...a,
+          tags: nodeDescriptionTags,
+        }),
     });
 
     const graph: DependencyGraph = finalizeGraph({
@@ -135,7 +145,11 @@ export const generateDependencyGraph = async (
     cwd,
     nodes: analyzed.nodes,
     nodeDescriptionLimit,
-    describeSourceText: describeTsJsModule,
+    describeSourceText: (a) =>
+      describeTsJsModule({
+        ...a,
+        tags: nodeDescriptionTags,
+      }),
   });
 
   const graph: DependencyGraph = finalizeGraph({

@@ -5,8 +5,8 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 ## Next up
 
 - Release readiness
+  - Expect new ESLint warnings until TS/JS modules add usable prose for the chosen tags.
   - Re-run the full suite (`lint`, `typecheck`, `test`, `build`, `docs`, `knip`) before publishing.
-  - Consider a small consumer-facing example that demonstrates `nodeDescriptionLimit` and `maxErrors`.
 
 ## Design snapshot (keep in sync while implementing)
 
@@ -69,3 +69,4 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 - Added GraphNode.description and maxErrors option.
 - Fixed lint and Vitest SSR issues after adding descriptions.
 - Validated full suite after description/maxErrors changes.
+- Added exported ESLint rule for module doc prose.

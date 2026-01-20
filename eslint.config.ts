@@ -9,6 +9,7 @@ import jsoncParser from 'jsonc-eslint-parser';
 import tseslint from 'typescript-eslint';
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import stanContextEslint from './src/eslint/index';
 
 const tsconfigRootDir = dirname(fileURLToPath(import.meta.url));
 
@@ -52,6 +53,7 @@ const config = [
       prettier: prettierPlugin,
       'simple-import-sort': simpleImportSortPlugin,
       tsdoc,
+      'stan-context': stanContextEslint,
     },
     rules: {
       // Formatting via Prettier
@@ -64,6 +66,8 @@ const config = [
       '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
       // TSDoc hygiene (quiet)
       'tsdoc/syntax': ['warn'],
+      // Encourage module-level doc prose for TS/JS modules
+      'stan-context/require-module-description': ['warn'],
     },
   },
 

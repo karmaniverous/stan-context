@@ -1,18 +1,24 @@
 /**
  * Requirements addressed:
  * - TS/JS provider derives GraphNode.description from the prose portion of a
- *   doc comment containing `@module` (or `@packageDocumentation`).
+ *   doc comment containing `@module` and/or `@packageDocumentation`.
  * - Never use the module tag itself as the description (prose only; omit when
  *   prose is empty).
- * - Normalize to a single line and truncate to `nodeDescriptionLimit` with
- *   ASCII `...`.
- * - Prefer whichever yields higher entropy after cleanup + truncation; tie
- *   breaks in favor of `@module`.
+ * - Normalize to a single line and truncate to a prefix of `nodeDescriptionLimit`
+ *   characters, then append ASCII `...` (ellipsis is not counted in the prefix).
+ * - When multiple candidates exist, prefer higher-entropy prose:
+ *   choose the longest cleaned prose; tie breaks in favor of `@module`.
  */
 
 const docBlockRe = /\/\*\*[\s\S]*?\*\//g;
 
-const hasTag = (block: string, tag: string): boolean =>
+export type NodeDescriptionTag = 'module' | 'packageDocumentation';
+export const DEFAULT_NODE_DESCRIPTION_TAGS: NodeDescriptionTag[] = [
+  'module',
+  'packageDocumentation',
+];
+
+const hasTag = (block: string, tag: NodeDescriptionTag): boolean =>
   new RegExp(`@${tag}\\b`).test(block);
 
 const stripBlockCommentSyntax = (block: string): string[] => {
@@ -48,13 +54,9 @@ const cleanupInlineMarkup = (text: string): string => {
   return out;
 };
 
-const extractProseFromTaggedBlock = (
+const extractNormalizedProseFromTaggedBlock = (
   block: string,
-  nodeDescriptionLimit: number,
 ): string | undefined => {
-  const limit = nodeDescriptionLimit;
-  if (!Number.isFinite(limit) || limit <= 0) return undefined;
-
   const lines = stripBlockCommentSyntax(block);
 
   // Prose is anything not on a tag line.
@@ -70,44 +72,108 @@ const extractProseFromTaggedBlock = (
   const normalized = cleaned.replace(/\s+/g, ' ').trim();
   if (!normalized) return undefined;
 
-  if (normalized.length <= limit) return normalized;
-  if (limit < 4) return undefined;
+  return normalized;
+};
 
-  const head = normalized.slice(0, limit - 3).trimEnd();
+const truncateWithEllipsis = (text: string, prefixLimit: number): string => {
+  const limit = prefixLimit;
+  if (!Number.isFinite(limit) || limit <= 0) return '';
+
+  if (text.length <= limit) return text;
+
+  const head = text.slice(0, limit).trimEnd();
   return `${head}...`;
+};
+
+export type TagProseStatus =
+  | { tag: NodeDescriptionTag; present: false; usable: false }
+  | { tag: NodeDescriptionTag; present: true; usable: false }
+  | {
+      tag: NodeDescriptionTag;
+      present: true;
+      usable: true;
+      description: string;
+    };
+
+export const getBestProseForTag = (args: {
+  sourceText: string;
+  tag: NodeDescriptionTag;
+  nodeDescriptionLimit: number;
+}): TagProseStatus => {
+  const limit = args.nodeDescriptionLimit;
+  if (!Number.isFinite(limit) || limit <= 0) {
+    return { tag: args.tag, present: false, usable: false };
+  }
+
+  let present = false;
+  let best: { prose: string; len: number } | null = null;
+
+  for (const match of args.sourceText.matchAll(docBlockRe)) {
+    const block = match[0];
+    if (!hasTag(block, args.tag)) continue;
+    present = true;
+
+    const prose = extractNormalizedProseFromTaggedBlock(block);
+    if (!prose) continue;
+
+    const len = prose.length;
+    if (!best || len > best.len) best = { prose, len };
+  }
+
+  if (!present) return { tag: args.tag, present: false, usable: false };
+  if (!best) return { tag: args.tag, present: true, usable: false };
+
+  const description = truncateWithEllipsis(best.prose, limit);
+  if (!description) return { tag: args.tag, present: true, usable: false };
+
+  return { tag: args.tag, present: true, usable: true, description };
 };
 
 export const describeTsJsModule = (args: {
   sourceText: string;
   nodeDescriptionLimit: number;
+  tags?: NodeDescriptionTag[];
 }): string | undefined => {
   const limit = args.nodeDescriptionLimit;
   if (!Number.isFinite(limit) || limit <= 0) return undefined;
 
-  let moduleBlock: string | undefined;
-  let pkgDocBlock: string | undefined;
+  const tags = (args.tags ?? DEFAULT_NODE_DESCRIPTION_TAGS).filter(Boolean);
+  const considerModule = tags.includes('module');
+  const considerPkg = tags.includes('packageDocumentation');
 
-  for (const match of args.sourceText.matchAll(docBlockRe)) {
-    const block = match[0];
-    if (!moduleBlock && hasTag(block, 'module')) moduleBlock = block;
-    if (!pkgDocBlock && hasTag(block, 'packageDocumentation'))
-      pkgDocBlock = block;
-    if (moduleBlock && pkgDocBlock) break;
-  }
+  const moduleStatus = considerModule
+    ? getBestProseForTag({
+        sourceText: args.sourceText,
+        tag: 'module',
+        nodeDescriptionLimit: limit,
+      })
+    : null;
+
+  const pkgStatus = considerPkg
+    ? getBestProseForTag({
+        sourceText: args.sourceText,
+        tag: 'packageDocumentation',
+        nodeDescriptionLimit: limit,
+      })
+    : null;
 
   const moduleDesc =
-    moduleBlock && extractProseFromTaggedBlock(moduleBlock, limit);
+    moduleStatus && moduleStatus.present && moduleStatus.usable
+      ? moduleStatus.description
+      : undefined;
+
   const pkgDesc =
-    pkgDocBlock && extractProseFromTaggedBlock(pkgDocBlock, limit);
+    pkgStatus && pkgStatus.present && pkgStatus.usable
+      ? pkgStatus.description
+      : undefined;
 
   if (!moduleDesc && !pkgDesc) return undefined;
   if (moduleDesc && !pkgDesc) return moduleDesc;
   if (!moduleDesc && pkgDesc) return pkgDesc;
 
-  // Prefer whichever yields more entropy after cleanup + truncation.
+  // Both exist. Prefer higher-entropy prose. With truncation configured as
+  // "prefix N + ...", compare by resulting string length and tie-break to @module.
   if ((pkgDesc as string).length > (moduleDesc as string).length)
     return pkgDesc as string;
-
-  // Tie-break to @module.
   return moduleDesc as string;
 };

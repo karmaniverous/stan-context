@@ -120,12 +120,13 @@ export type DependencyGraph = {
   - Remove tag lines (`@...`).
   - Best-effort remove common inline markup (e.g., `{@link ...}`, Markdown links, inline code backticks).
   - Normalize to a single line (collapse whitespace to single spaces and trim).
-- Candidate selection:
-  - If both `@module` and `@packageDocumentation` candidates are present, choose whichever yields the longer result after cleanup + truncation.
-  - Tie-break: choose the `@module` candidate.
 - Truncation:
-  - The provider MUST truncate to `nodeDescriptionLimit` characters and append ASCII `...` when truncated.
-  - If `nodeDescriptionLimit < 4`, descriptions SHOULD be omitted.
+  - The provider MUST truncate to a prefix of `nodeDescriptionLimit` characters and append ASCII `...` when truncated.
+  - The appended `...` is not counted toward `nodeDescriptionLimit`.
+- Candidate selection (entropy):
+  - The provider MUST scan all doc blocks for each configured tag and choose the usable candidate with the longest cleaned prose (highest entropy).
+  - If both `@module` and `@packageDocumentation` candidates are present, choose the one that yields the longer final description string after truncation.
+  - Tie-break: choose the `@module` candidate.
 
 ### Edge requirements
 
@@ -259,6 +260,7 @@ export type GraphOptions = {
   };
   previousGraph?: DependencyGraph;
   nodeDescriptionLimit?: number;
+  nodeDescriptionTags?: Array<'module' | 'packageDocumentation'>;
   maxErrors?: number;
 };
 
@@ -290,7 +292,10 @@ export function generateDependencyGraph(
 ## Runtime configuration knobs (non-semantic)
 
 - `nodeDescriptionLimit` (default: 160)
-  - Limits GraphNode.description length; 0 disables descriptions.
+  - Limits GraphNode.description prefix length; 0 disables descriptions.
+  - ASCII `...` is appended when truncated (ellipsis not counted in the prefix).
+- `nodeDescriptionTags` (default: `['module', 'packageDocumentation']`)
+  - Declares which TS/JS doc tags are considered for descriptions.
 - `maxErrors` (default: 50)
   - Limits GraphResult.errors length; 0 disables errors output.
   - When truncation occurs, the last entry MUST be a deterministic sentinel.

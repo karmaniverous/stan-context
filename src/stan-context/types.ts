@@ -48,10 +48,18 @@ export type GraphOptions = {
   };
   previousGraph?: DependencyGraph;
   /**
-   * Maximum length of GraphNode.description (TS/JS only). Uses ASCII `...` when
-   * truncated. Set to 0 to omit descriptions.
+   * Maximum prefix length of GraphNode.description (TS/JS only).
+   *
+   * When truncated, ASCII `...` is appended (not counted in the prefix limit).
+   * Set to 0 to omit descriptions.
    */
   nodeDescriptionLimit?: number;
+  /**
+   * Which TS/JS doc tags are considered when deriving descriptions.
+   *
+   * Defaults to `['module', 'packageDocumentation']`.
+   */
+  nodeDescriptionTags?: Array<'module' | 'packageDocumentation'>;
   /**
    * Maximum number of GraphResult.errors entries returned. When truncated, the
    * final entry is a deterministic sentinel. Set to 0 to omit errors.

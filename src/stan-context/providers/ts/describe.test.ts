@@ -34,7 +34,7 @@ export const x = 1;
 export const x = 1;
 `;
     const out = describeTsJsModule({ sourceText, nodeDescriptionLimit: 24 });
-    expect(out).toBe('Use FooType and bar()...');
+    expect(out).toBe('Use FooType and bar() p...');
   });
 
   test('prefers higher-entropy result after truncation; tie -> @module', () => {
@@ -57,7 +57,24 @@ export {};
 
     // Small enough that both truncate to same length; tie-break to @module.
     expect(describeTsJsModule({ sourceText, nodeDescriptionLimit: 10 })).toBe(
-      'Short m...',
+      'Short modu...',
+    );
+  });
+
+  test('uses best-entropy docblock when multiple candidates exist', () => {
+    const sourceText = `
+/**
+ * @module
+ */
+/**
+ * @module
+ * Longer description wins over earlier empty tag.
+ */
+export const x = 1;
+`;
+
+    expect(describeTsJsModule({ sourceText, nodeDescriptionLimit: 160 })).toBe(
+      'Longer description wins over earlier empty tag.',
     );
   });
 });
