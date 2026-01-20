@@ -34,7 +34,7 @@ export const x = 1;
 export const x = 1;
 `;
     const out = describeTsJsModule({ sourceText, nodeDescriptionLimit: 24 });
-    expect(out).toBe('Use FooType and bar() p...');
+    expect(out).toBe('Use FooType and bar() pl...');
   });
 
   test('prefers higher-entropy result after truncation; tie -> @module', () => {

@@ -6,6 +6,7 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 
 - Release readiness
   - Expect new ESLint warnings until TS/JS modules add usable prose for the chosen tags.
+  - Re-run `npm run lint` and confirm no ESLint errors (warnings expected).
   - Re-run the full suite (`lint`, `typecheck`, `test`, `build`, `docs`, `knip`) before publishing.
 
 ## Design snapshot (keep in sync while implementing)
@@ -69,4 +70,6 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 - Added GraphNode.description and maxErrors option.
 - Fixed lint and Vitest SSR issues after adding descriptions.
 - Validated full suite after description/maxErrors changes.
-- Added exported ESLint rule for module doc prose.
+- Added exported ESLint rule for module doc prose.
+- Fixed ESLint rule reporting + SSR test instability.
+- Improved eslint rule messaging and report location.

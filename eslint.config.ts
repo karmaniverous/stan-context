@@ -66,8 +66,9 @@ const config = [
       '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
       // TSDoc hygiene (quiet)
       'tsdoc/syntax': ['warn'],
-      // Encourage module-level doc prose for TS/JS modules
-      'stan-context/require-module-description': ['warn'],
+      // Enable stan-context defaults (includes require-module-description).
+      ...(stanContextEslint.configs.recommended
+        .rules as Record<string, unknown>),
     },
   },
 

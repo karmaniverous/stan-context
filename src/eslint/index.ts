@@ -11,5 +11,13 @@ export const rules = {
   'require-module-description': requireModuleDescriptionRule,
 };
 
-const plugin = { rules };
+export const configs = {
+  recommended: {
+    rules: {
+      'stan-context/require-module-description': 'warn',
+    },
+  },
+};
+
+const plugin = { rules, configs };
 export default plugin;

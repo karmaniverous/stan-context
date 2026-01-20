@@ -6,7 +6,16 @@
  *   GraphNode.description (prose-only; cleanup; single-line; truncation).
  * - Warn by default (consumer-configured); produce a clear message that
  *   reflects the configured tag set and distinguishes missing vs empty prose.
+ *
+ * UX notes:
+ * - Avoid redundant “Tag(s) missing …” messaging when the configured tags are
+ *   already listed in the “either/or” clause.
+ * - Avoid editor “whole file” highlighting by reporting on a tighter location:
+ *   - if a tag exists but is unusable: report on the first matching doc comment
+ *   - otherwise: report on the first token (e.g., first import)
  */
+
+import type { Rule } from 'eslint';
 
 import {
   getBestProseForTag,
@@ -19,12 +28,6 @@ type Options = Array<{
 
 const DEFAULT_TAGS: NodeDescriptionTag[] = ['module', 'packageDocumentation'];
 
-const formatTagList = (tags: NodeDescriptionTag[]): string => {
-  const rendered = tags.map((t) => `@${t}`);
-  if (rendered.length === 1) return rendered[0];
-  return `${rendered.slice(0, -1).join(', ')} or ${rendered.at(-1)}`;
-};
-
 const normalizeTags = (
   tags: NodeDescriptionTag[] | undefined,
 ): NodeDescriptionTag[] => {
@@ -32,6 +35,13 @@ const normalizeTags = (
   // Ensure stable ordering for messaging.
   const order: NodeDescriptionTag[] = ['module', 'packageDocumentation'];
   return order.filter((t) => inTags.includes(t));
+};
+
+const formatTagList = (tags: NodeDescriptionTag[]): string => {
+  const rendered = tags.map((t) => `@${t}`);
+  if (rendered.length === 1) return rendered[0];
+  const last = rendered[rendered.length - 1];
+  return `either ${rendered.slice(0, -1).join(', ')} or ${last}`;
 };
 
 const hasUsableDocForAnyTag = (
@@ -48,7 +58,42 @@ const hasUsableDocForAnyTag = (
   return { usable, results };
 };
 
-export const requireModuleDescriptionRule = {
+type SourceCodeLike = {
+  text: string;
+  ast?: { body?: unknown[] };
+  getAllComments?: () => Array<{
+    type: string;
+    value: string;
+    loc?: unknown;
+  }>;
+  getFirstToken?: (n: unknown) => { loc?: unknown } | null;
+};
+
+const findFirstDocCommentLocForTag = (
+  sourceCode: SourceCodeLike,
+  tag: NodeDescriptionTag,
+): unknown | undefined => {
+  const comments = sourceCode.getAllComments ? sourceCode.getAllComments() : [];
+  // For `/** ... */` comments, ESLint exposes `value` without delimiters and it
+  // begins with `*`.
+  const found = comments.find(
+    (c) =>
+      c.type === 'Block' &&
+      typeof c.value === 'string' &&
+      c.value.startsWith('*') &&
+      c.value.includes(`@${tag}`),
+  );
+  return found?.loc;
+};
+
+const getFirstTokenLoc = (sourceCode: SourceCodeLike): unknown | undefined => {
+  if (!sourceCode.getFirstToken) return undefined;
+  const firstNode = sourceCode.ast?.body?.[0] ?? sourceCode.ast;
+  const tok = sourceCode.getFirstToken(firstNode ?? {});
+  return tok?.loc;
+};
+
+export const requireModuleDescriptionRule: Rule.RuleModule = {
   meta: {
     type: 'suggestion',
     docs: {
@@ -69,45 +114,54 @@ export const requireModuleDescriptionRule = {
       },
     ],
   },
-  create(context: {
-    options: Options;
-    getSourceCode: () => { text: string };
-    report: (args: { loc?: unknown; message: string }) => void;
-  }) {
-    const opt = context.options?.[0];
+  create(context) {
+    const opts = (context.options as Options) ?? [];
+    const opt = opts[0];
     const tags = normalizeTags(opt?.tags);
     const wanted = formatTagList(tags);
 
     return {
-      Program() {
-        const sourceText = context.getSourceCode().text;
+      Program(node) {
+        const sourceCode = context.getSourceCode() as unknown as SourceCodeLike;
+        const sourceText = sourceCode.text;
+
         const { usable, results } = hasUsableDocForAnyTag(sourceText, tags);
         if (usable) return;
 
         const presentButEmpty = results
           .filter((r) => r.present && !r.usable)
-          .map((r) => `@${r.tag}`);
+          .map((r) => r.tag);
 
-        const missing = results
-          .filter((r) => !r.present)
-          .map((r) => `@${r.tag}`);
-
-        const parts: string[] = [];
-        parts.push(
+        const parts: string[] = [
           `Missing usable module documentation: add a /** ... */ doc comment containing ${wanted} with prose.`,
-        );
+        ];
 
+        for (const t of presentButEmpty) {
+          parts.push(`Found @${t} but prose is empty after cleanup.`);
+        }
+
+        const message = parts.join(' ');
+
+        // Tight location selection to avoid editor “whole file” highlighting.
         if (presentButEmpty.length) {
-          parts.push(
-            `Tag(s) present but prose is empty after cleanup: ${presentButEmpty.join(', ')}.`,
+          const loc =
+            findFirstDocCommentLocForTag(sourceCode, presentButEmpty[0]) ??
+            getFirstTokenLoc(sourceCode);
+          context.report(
+            (loc
+              ? { node, loc, message }
+              : { node, message }) as unknown as Rule.ReportDescriptor,
           );
-        }
-        if (missing.length) {
-          parts.push(`Tag(s) missing: ${missing.join(', ')}.`);
+          return;
         }
 
-        context.report({ message: parts.join(' ') });
+        const loc = getFirstTokenLoc(sourceCode);
+        context.report(
+          (loc
+            ? { node, loc, message }
+            : { node, message }) as unknown as Rule.ReportDescriptor,
+        );
       },
     };
   },
-} as const;
+};

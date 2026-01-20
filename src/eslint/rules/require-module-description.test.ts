@@ -9,14 +9,15 @@ const run = (args: {
   const ctx = {
     options: args.options ?? [],
     getSourceCode: () => ({ text: args.sourceText }),
-    report: ({ message }: { message: string }) => messages.push(message),
+    report: ({ message }: { node: unknown; message: string }) =>
+      messages.push(message),
   } as unknown as Parameters<typeof requireModuleDescriptionRule.create>[0];
 
   const listeners = requireModuleDescriptionRule.create(ctx) as {
-    Program?: () => void;
+    Program?: (node: unknown) => void;
   };
 
-  listeners.Program?.();
+  listeners.Program?.({ type: 'Program' });
   return messages;
 };
 
@@ -28,7 +29,8 @@ describe('eslint rule: require-module-description', () => {
     expect(msgs).toHaveLength(1);
     expect(msgs[0]).toContain('@module');
     expect(msgs[0]).toContain('@packageDocumentation');
-    expect(msgs[0]).toContain('Tag(s) missing');
+    expect(msgs[0]).toContain('either');
+    expect(msgs[0]).not.toContain('Tag(s) missing');
   });
 
   test('warns when tag is present but prose is empty', () => {
@@ -36,8 +38,8 @@ describe('eslint rule: require-module-description', () => {
       sourceText: `/** @module */\nexport const x = 1;\n`,
     });
     expect(msgs).toHaveLength(1);
-    expect(msgs[0]).toContain('present but prose is empty');
     expect(msgs[0]).toContain('@module');
+    expect(msgs[0]).toContain('prose is empty');
   });
 
   test('does not warn when @module prose is present', () => {
@@ -54,6 +56,6 @@ describe('eslint rule: require-module-description', () => {
     });
     expect(msgs).toHaveLength(1);
     expect(msgs[0]).toContain('@module');
-    expect(msgs[0]).not.toContain('@packageDocumentation or');
+    expect(msgs[0]).not.toContain('@packageDocumentation');
   });
 });

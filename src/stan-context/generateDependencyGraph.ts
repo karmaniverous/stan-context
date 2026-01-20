@@ -31,7 +31,10 @@ import type {
 
 const DEFAULT_NODE_DESCRIPTION_LIMIT = 160;
 const DEFAULT_MAX_ERRORS = 50;
-const DEFAULT_NODE_DESCRIPTION_TAGS = ['module', 'packageDocumentation'] as const;
+const DEFAULT_NODE_DESCRIPTION_TAGS = [
+  'module',
+  'packageDocumentation',
+] as const;
 
 const isAnalyzableSource = (id: string): boolean => {
   const lower = id.toLowerCase();
