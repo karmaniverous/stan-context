@@ -76,4 +76,4 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 - Made doc-tag extraction and eslint rule tag-agnostic.
 - Fixed typed-lint issues in eslint rule implementation.
 - Added shared docblock scanner to ignore strings.
-- Wired docblock scanner into descriptions; fixed SSR test imports.
+- Wired docblock scanner into descriptions; fixed SSR test imports.- Fixed reexportTraversal test to use named exports (SSR).
