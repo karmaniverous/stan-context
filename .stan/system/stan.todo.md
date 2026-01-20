@@ -4,9 +4,9 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 
 ## Next up
 
-- Validate node descriptions + SSR stability
-  - Re-run `npm run lint` and confirm 0 errors.
-  - Re-run `npm run test` and confirm green.
+- Release readiness
+  - Re-run the full suite (`lint`, `typecheck`, `test`, `build`, `docs`, `knip`) before publishing.
+  - Consider a small consumer-facing example that demonstrates `nodeDescriptionLimit` and `maxErrors`.
 
 ## Design snapshot (keep in sync while implementing)
 
@@ -67,4 +67,5 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 - Updated package metadata and moved to ESM-only packaging.
 - Removed Rollup CJS output (ESM-only build).
 - Added GraphNode.description and maxErrors option.
-- Fixed lint and Vitest SSR issues after adding descriptions.
+- Fixed lint and Vitest SSR issues after adding descriptions.
+- Validated full suite after description/maxErrors changes.
