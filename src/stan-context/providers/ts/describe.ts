@@ -8,9 +8,10 @@
  *   characters, then append ASCII `...` (ellipsis is not counted in the prefix).
  * - When multiple candidates exist, prefer higher-entropy prose:
  *   choose the longest cleaned prose; tie breaks by configured tag order.
+ * - Docblocks MUST ignore comment-shaped sequences inside strings/templates.
  */
 
-const docBlockRe = /\/\*\*[\s\S]*?\*\//g;
+import { scanDocBlocks } from './docblocks';
 
 export const DEFAULT_NODE_DESCRIPTION_TAGS: string[] = [
   '@module',
@@ -127,9 +128,7 @@ export const getBestProseForTag = (args: {
   let present = false;
   let best: { prose: string; len: number } | null = null;
 
-  for (const match of args.sourceText.matchAll(docBlockRe)) {
-    const block = match[0];
-
+  for (const block of scanDocBlocks(args.sourceText)) {
     const lines = stripBlockCommentSyntax(block);
     const tagTokens = new Set<string>();
     for (const l of lines) {

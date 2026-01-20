@@ -1,9 +1,25 @@
 import ts from 'typescript';
 
-import traversal from './reexportTraversal';
+import * as traversal from './reexportTraversal';
 
-const { createReexportTraversalCache, resolveDefiningExportsForName } =
-  traversal;
+const get = <T>(name: string): T => {
+  const named = (traversal as unknown as Record<string, unknown>)[name];
+  if (named !== undefined) return named as T;
+
+  const viaDefault = (
+    traversal as unknown as { default?: Record<string, unknown> }
+  ).default?.[name];
+  if (viaDefault !== undefined) return viaDefault as T;
+
+  throw new Error(`reexportTraversal export not found: ${name}`);
+};
+
+const createReexportTraversalCache = get<
+  typeof import('./reexportTraversal').createReexportTraversalCache
+>('createReexportTraversalCache');
+const resolveDefiningExportsForName = get<
+  typeof import('./reexportTraversal').resolveDefiningExportsForName
+>('resolveDefiningExportsForName');
 
 const sf = (fileName: string, body: string): ts.SourceFile =>
   ts.createSourceFile(fileName, body, ts.ScriptTarget.ES2022, true);

@@ -6,9 +6,25 @@
  *   - Reuse nodes/edges from previousGraph for clean sources.
  */
 
+import path from 'node:path';
+
 import type { DependencyGraph, GraphEdge, GraphNode, NodeId } from '../types';
 import { tryHashFileSha256 } from './hash';
-import { nodeIdToAbsPath } from './paths';
+
+// NOTE: Intentionally inlined (instead of importing from ./paths) to avoid
+// Vitest SSR instability observed in this repo where named exports can be
+// transiently unavailable during module evaluation.
+const toPosixPath = (p: string): string => p.replace(/\\/g, '/');
+const isPosixAbsolute = (p: string): boolean => p.startsWith('/');
+const isWindowsDriveAbsolute = (p: string): boolean => /^[a-zA-Z]:\//.test(p);
+const isAbsoluteNodeId = (id: NodeId): boolean =>
+  isPosixAbsolute(id) || isWindowsDriveAbsolute(id);
+const nodeIdToAbsPath = (cwd: string, id: NodeId): string | null => {
+  if (id.startsWith('node:')) return null;
+  if (isAbsoluteNodeId(id)) return id;
+  // Treat repo-relative NodeIds as paths under cwd.
+  return path.join(cwd, toPosixPath(id));
+};
 
 export type IncrementalPlan = {
   dirtySourceIds: Set<NodeId>;

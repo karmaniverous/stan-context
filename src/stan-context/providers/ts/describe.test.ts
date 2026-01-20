@@ -78,9 +78,12 @@ export const x = 1;
     );
   });
 
-  test('ignores docblock-shaped sequences inside strings', () => {
+  test('ignores docblock-shaped sequences inside strings (with prose)', () => {
     const sourceText = `
-const s = \`/** @module */\`;
+const s = \`/**
+ * @module
+ * In-string prose must be ignored.
+ */\`;
 export const x = 1;
 void s;
 `;

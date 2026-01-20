@@ -137,36 +137,34 @@ export const scanDocBlocks = (sourceText: string): string[] => {
       continue;
     }
 
-    // --- Code mode ---
-    if (m.kind === 'code') {
-      if (ch === "'") {
-        push({ kind: 'single' });
-        continue;
-      }
-      if (ch === '"') {
-        push({ kind: 'double' });
-        continue;
-      }
-      if (ch === '`') {
-        push({ kind: 'template' });
-        continue;
-      }
+    // --- Code mode (only remaining case) ---
+    if (ch === "'") {
+      push({ kind: 'single' });
+      continue;
+    }
+    if (ch === '"') {
+      push({ kind: 'double' });
+      continue;
+    }
+    if (ch === '`') {
+      push({ kind: 'template' });
+      continue;
+    }
 
-      // Line comment
-      if (ch === '/' && next === '/') {
-        i = skipLineComment(sourceText, i + 2) - 1;
-        continue;
-      }
+    // Line comment
+    if (ch === '/' && next === '/') {
+      i = skipLineComment(sourceText, i + 2) - 1;
+      continue;
+    }
 
-      // Block comment: capture only docblocks "/**"
-      if (ch === '/' && next === '*') {
-        const isDoc = sourceText[i + 2] === '*';
-        const end = findBlockCommentEnd(sourceText, i + 2);
-        if (end === null) return out;
-        if (isDoc) out.push(sourceText.slice(i, end));
-        i = end - 1;
-        continue;
-      }
+    // Block comment: capture only docblocks "/**"
+    if (ch === '/' && next === '*') {
+      const isDoc = sourceText[i + 2] === '*';
+      const end = findBlockCommentEnd(sourceText, i + 2);
+      if (end === null) return out;
+      if (isDoc) out.push(sourceText.slice(i, end));
+      i = end - 1;
+      continue;
     }
   }
 
