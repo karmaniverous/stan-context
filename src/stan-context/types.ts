@@ -55,11 +55,13 @@ export type GraphOptions = {
    */
   nodeDescriptionLimit?: number;
   /**
-   * Which TS/JS doc tags are considered when deriving descriptions.
+   * Which TSDoc tags are considered when deriving descriptions (TS/JS only).
    *
-   * Defaults to `['module', 'packageDocumentation']`.
+   * Tags MUST include the `@` prefix and match `^@\\w+$`.
+   *
+   * Defaults to `['@module', '@packageDocumentation']`.
    */
-  nodeDescriptionTags?: Array<'module' | 'packageDocumentation'>;
+  nodeDescriptionTags?: string[];
   /**
    * Maximum number of GraphResult.errors entries returned. When truncated, the
    * final entry is a deterministic sentinel. Set to 0 to omit errors.

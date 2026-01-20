@@ -44,7 +44,7 @@ type GraphOptions = {
   };
   previousGraph?: DependencyGraph;
   nodeDescriptionLimit?: number;
-  nodeDescriptionTags?: Array<'module' | 'packageDocumentation'>;
+  nodeDescriptionTags?: string[];
   maxErrors?: number;
 };
 
@@ -79,13 +79,13 @@ Runtime options:
   - Uses the prose portion only (tag text is ignored).
   - Normalizes to a single line; when truncated, keeps a prefix of `nodeDescriptionLimit` characters and appends ASCII `...` (ellipsis not counted in the prefix).
   - Set to `0` to omit descriptions entirely.
-- `nodeDescriptionTags` (default: `['module', 'packageDocumentation']`)
-  - Controls which tags are considered for description extraction.
+- `nodeDescriptionTags` (default: `['@module', '@packageDocumentation']`)
+  - Controls which TSDoc tags are considered for description extraction (TS/JS only).
+  - Tags MUST include the `@` prefix and match `^@\\w+$`.
 - `maxErrors` (default: 50)
   - Caps the number of returned `errors` entries to avoid runaway output.
   - When truncation occurs, the final entry is a deterministic sentinel string.
-  - Set to `0` to omit errors entirely.
-## Graph schema and invariants (high level)
+  - Set to `0` to omit errors entirely.## Graph schema and invariants (high level)
 
 The graph is deterministic and JSON-serializable:
 

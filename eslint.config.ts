@@ -66,9 +66,8 @@ const config = [
       '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
       // TSDoc hygiene (quiet)
       'tsdoc/syntax': ['warn'],
-      // Enable stan-context defaults (includes require-module-description).
-      ...(stanContextEslint.configs.recommended
-        .rules as Record<string, unknown>),
+      // Enable stan-context defaults.
+      ...stanContextEslint.configs.recommended.rules,
     },
   },
 
@@ -95,7 +94,10 @@ const config = [
     languageOptions: { parser: jsoncParser },
     plugins: { jsonc },
     rules: {
-      ...(jsonc.configs['recommended-with-json']?.rules as Record<string, unknown>),
+      ...(jsonc.configs['recommended-with-json']?.rules as Record<
+        string,
+        unknown
+      >),
     },
   },
 ];

@@ -6,6 +6,7 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 
 - Release readiness
   - Expect new ESLint warnings until TS/JS modules add usable prose for the chosen tags.
+  - Re-run `npm run lint` after tag-agnostic doc-tag refactor (warnings expected).
   - Re-run `npm run lint` and confirm no ESLint errors (warnings expected).
   - Re-run the full suite (`lint`, `typecheck`, `test`, `build`, `docs`, `knip`) before publishing.
 
@@ -73,3 +74,4 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 - Added exported ESLint rule for module doc prose.
 - Fixed ESLint rule reporting + SSR test instability.
 - Improved eslint rule messaging and report location.
+- Made doc-tag extraction and eslint rule tag-agnostic.

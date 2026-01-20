@@ -19,35 +19,21 @@ import type { Rule } from 'eslint';
 
 import {
   getBestProseForTag,
-  type NodeDescriptionTag,
+  normalizeDocTags,
 } from '../../stan-context/providers/ts/describe';
 
 type Options = Array<{
-  tags?: NodeDescriptionTag[];
+  tags?: string[];
 }>;
 
-const DEFAULT_TAGS: NodeDescriptionTag[] = ['module', 'packageDocumentation'];
-
-const normalizeTags = (
-  tags: NodeDescriptionTag[] | undefined,
-): NodeDescriptionTag[] => {
-  const inTags = (tags && tags.length ? tags : DEFAULT_TAGS).filter(Boolean);
-  // Ensure stable ordering for messaging.
-  const order: NodeDescriptionTag[] = ['module', 'packageDocumentation'];
-  return order.filter((t) => inTags.includes(t));
+const formatTagList = (tags: string[]): string => {
+  if (tags.length === 0) return '@module';
+  if (tags.length === 1) return tags[0];
+  if (tags.length === 2) return `either ${tags[0]} or ${tags[1]}`;
+  return `one of: ${tags.join(', ')}`;
 };
 
-const formatTagList = (tags: NodeDescriptionTag[]): string => {
-  const rendered = tags.map((t) => `@${t}`);
-  if (rendered.length === 1) return rendered[0];
-  const last = rendered[rendered.length - 1];
-  return `either ${rendered.slice(0, -1).join(', ')} or ${last}`;
-};
-
-const hasUsableDocForAnyTag = (
-  sourceText: string,
-  tags: NodeDescriptionTag[],
-) => {
+const hasUsableDocForAnyTag = (sourceText: string, tags: string[]) => {
   // Use a tiny prefix limit for performance. Under the truncation contract
   // ("prefix N + ..."), any non-empty prose remains non-empty with N=1.
   const limit = 1;
@@ -71,7 +57,7 @@ type SourceCodeLike = {
 
 const findFirstDocCommentLocForTag = (
   sourceCode: SourceCodeLike,
-  tag: NodeDescriptionTag,
+  tag: string,
 ): unknown | undefined => {
   const comments = sourceCode.getAllComments ? sourceCode.getAllComments() : [];
   // For `/** ... */` comments, ESLint exposes `value` without delimiters and it
@@ -81,7 +67,7 @@ const findFirstDocCommentLocForTag = (
       c.type === 'Block' &&
       typeof c.value === 'string' &&
       c.value.startsWith('*') &&
-      c.value.includes(`@${tag}`),
+      c.value.includes(tag),
   );
   return found?.loc;
 };
@@ -106,7 +92,7 @@ export const requireModuleDescriptionRule: Rule.RuleModule = {
         properties: {
           tags: {
             type: 'array',
-            items: { enum: ['module', 'packageDocumentation'] },
+            items: { type: 'string', pattern: '^@\\w+$' },
             minItems: 1,
           },
         },
@@ -117,7 +103,7 @@ export const requireModuleDescriptionRule: Rule.RuleModule = {
   create(context) {
     const opts = (context.options as Options) ?? [];
     const opt = opts[0];
-    const tags = normalizeTags(opt?.tags);
+    const tags = normalizeDocTags(opt?.tags);
     const wanted = formatTagList(tags);
 
     return {
@@ -137,7 +123,7 @@ export const requireModuleDescriptionRule: Rule.RuleModule = {
         ];
 
         for (const t of presentButEmpty) {
-          parts.push(`Found @${t} but prose is empty after cleanup.`);
+          parts.push(`Found ${t} but prose is empty after cleanup.`);
         }
 
         const message = parts.join(' ');

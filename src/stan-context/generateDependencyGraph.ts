@@ -17,7 +17,7 @@ import { planIncremental } from './core/incremental';
 import { makeHashedFileNode } from './core/nodes';
 import { scanUniverseFiles } from './core/universe';
 import { analyzeTypeScript } from './providers/ts/analyze';
-import { describeTsJsModule } from './providers/ts/describe';
+import * as tsDescribe from './providers/ts/describe';
 import { tryLoadTypeScript } from './providers/ts/load';
 import { loadCompilerOptions } from './providers/ts/tsconfig';
 import type {
@@ -32,8 +32,8 @@ import type {
 const DEFAULT_NODE_DESCRIPTION_LIMIT = 160;
 const DEFAULT_MAX_ERRORS = 50;
 const DEFAULT_NODE_DESCRIPTION_TAGS = [
-  'module',
-  'packageDocumentation',
+  '@module',
+  '@packageDocumentation',
 ] as const;
 
 const isAnalyzableSource = (id: string): boolean => {
@@ -106,7 +106,7 @@ export const generateDependencyGraph = async (
       nodes: baseNodes,
       nodeDescriptionLimit,
       describeSourceText: (a) =>
-        describeTsJsModule({
+        tsDescribe.describeTsJsModule({
           ...a,
           tags: nodeDescriptionTags,
         }),
@@ -149,7 +149,7 @@ export const generateDependencyGraph = async (
     nodes: analyzed.nodes,
     nodeDescriptionLimit,
     describeSourceText: (a) =>
-      describeTsJsModule({
+      tsDescribe.describeTsJsModule({
         ...a,
         tags: nodeDescriptionTags,
       }),

@@ -2,7 +2,7 @@ import { requireModuleDescriptionRule } from './require-module-description';
 
 const run = (args: {
   sourceText: string;
-  options?: Array<{ tags?: Array<'module' | 'packageDocumentation'> }>;
+  options?: Array<{ tags?: string[] }>;
 }): string[] => {
   const messages: string[] = [];
 
@@ -52,7 +52,7 @@ describe('eslint rule: require-module-description', () => {
   test('respects tags option (module-only)', () => {
     const msgs = run({
       sourceText: `/**\n * @packageDocumentation\n * Some prose.\n */\nexport const x = 1;\n`,
-      options: [{ tags: ['module'] }],
+      options: [{ tags: ['@module'] }],
     });
     expect(msgs).toHaveLength(1);
     expect(msgs[0]).toContain('@module');

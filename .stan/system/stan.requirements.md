@@ -109,10 +109,10 @@ export type DependencyGraph = {
   - Node kind MUST be `source` or `external`.
   - Node language MUST be `ts` or `js` (including `.d.ts` as `ts`).
 - Source annotation:
-  - The provider MUST look for a `/** ... */` doc comment containing either:
-    - `@module`, or
-    - `@packageDocumentation`.
-  - The description MUST be derived from the prose portion of that same doc comment.
+  - The provider MUST look for a `/** ... */` doc comment containing one or more configured TSDoc tags.
+  - Tags MUST be passed in as strings that include the `@` prefix and match `/^@\w+$/`.
+  - Default tags: `@module` and `@packageDocumentation`.
+  - The description MUST be derived from the prose portion of the same doc comment block that contains the tag.
   - The tag text itself MUST NOT be used as the description.
   - If the prose resolves to an empty string after cleanup, omit the description.
 - Cleanup/normalization:
@@ -125,8 +125,8 @@ export type DependencyGraph = {
   - The appended `...` is not counted toward `nodeDescriptionLimit`.
 - Candidate selection (entropy):
   - The provider MUST scan all doc blocks for each configured tag and choose the usable candidate with the longest cleaned prose (highest entropy).
-  - If both `@module` and `@packageDocumentation` candidates are present, choose the one that yields the longer final description string after truncation.
-  - Tie-break: choose the `@module` candidate.
+  - Among configured tags, choose the candidate that yields the longer final description string after truncation.
+  - Tie-break: choose the earliest tag in the configured tag list.
 
 ### Edge requirements
 
@@ -260,7 +260,10 @@ export type GraphOptions = {
   };
   previousGraph?: DependencyGraph;
   nodeDescriptionLimit?: number;
-  nodeDescriptionTags?: Array<'module' | 'packageDocumentation'>;
+  /**
+   * TSDoc tags to consider for TS/JS module descriptions (strict `@` prefix).
+   */
+  nodeDescriptionTags?: string[];
   maxErrors?: number;
 };
 
@@ -294,8 +297,9 @@ export function generateDependencyGraph(
 - `nodeDescriptionLimit` (default: 160)
   - Limits GraphNode.description prefix length; 0 disables descriptions.
   - ASCII `...` is appended when truncated (ellipsis not counted in the prefix).
-- `nodeDescriptionTags` (default: `['module', 'packageDocumentation']`)
-  - Declares which TS/JS doc tags are considered for descriptions.
+- `nodeDescriptionTags` (default: `['@module', '@packageDocumentation']`)
+  - Declares which TSDoc tags are considered for TS/JS descriptions.
+  - Tags MUST include the `@` prefix and match `/^@\w+$/`.
 - `maxErrors` (default: 50)
   - Limits GraphResult.errors length; 0 disables errors output.
   - When truncation occurs, the last entry MUST be a deterministic sentinel.
