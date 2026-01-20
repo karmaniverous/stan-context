@@ -43,6 +43,8 @@ type GraphOptions = {
     anchors?: string[];
   };
   previousGraph?: DependencyGraph;
+  nodeDescriptionLimit?: number;
+  maxErrors?: number;
 };
 
 type GraphResult = {
@@ -69,6 +71,18 @@ Incremental usage:
 
 - Pass `previousGraph` from your persisted state to reuse edges and limit analysis to a “dirty” set.
 
+Runtime options:
+
+- `nodeDescriptionLimit` (default: 160)
+  - Produces `GraphNode.description` for TS/JS nodes based on a `/** ... */` doc comment containing `@module` or `@packageDocumentation`.
+  - Uses the prose portion only (tag text is ignored).
+  - Normalizes to a single line and truncates with ASCII `...`.
+  - Set to `0` to omit descriptions entirely.
+- `maxErrors` (default: 50)
+  - Caps the number of returned `errors` entries to avoid runaway output.
+  - When truncation occurs, the final entry is a deterministic sentinel string.
+  - Set to `0` to omit errors entirely.
+
 ## Graph schema and invariants (high level)
 
 The graph is deterministic and JSON-serializable:
@@ -92,6 +106,12 @@ Node IDs are stable strings:
 - `external`: a resolved dependency file (commonly under `node_modules`)
 - `builtin`: a Node.js builtin module (`node:<name>`)
 - `missing`: an unresolved module specifier
+
+### Node descriptions (TS/JS)
+
+- `GraphNode.description` is optional.
+- It is produced for TS/JS nodes (`source` and `external`) when a suitable doc comment is present and `nodeDescriptionLimit > 0`.
+- It is omitted when no prose is found.
 
 ### Edge kinds and resolution
 

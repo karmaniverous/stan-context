@@ -2,6 +2,7 @@
  * Requirements addressed:
  * - Sparse metadata fields (omit null/false).
  * - Deterministic metadata key ordering when present: hash, isOutsideRoot, size.
+ * - Node descriptions are optional and omitted when empty.
  */
 
 import type {
@@ -32,8 +33,12 @@ export const makeNode = (args: {
   id: NodeId;
   kind: GraphNodeKind;
   language: GraphLanguage;
+  description?: string;
   metadata?: GraphNodeMetadata;
 }): GraphNode => ({
+  ...(typeof args.description === 'string' && args.description.trim()
+    ? { description: args.description.trim() }
+    : {}),
   id: args.id,
   kind: args.kind,
   language: args.language,

@@ -66,4 +66,5 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 - Removed unused deps and exported referenced graph types.
 - Exported remaining graph types to satisfy TypeDoc.
 - Updated package metadata and moved to ESM-only packaging.
-- Removed Rollup CJS output (ESM-only build).
+- Removed Rollup CJS output (ESM-only build).
+- Added GraphNode.description and maxErrors option.

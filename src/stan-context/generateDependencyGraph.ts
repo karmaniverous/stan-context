@@ -1,18 +1,23 @@
 /**
  * Requirements addressed:
- * - Public API: generateDependencyGraph(opts) =\> \{ graph, stats, errors \}.
+ * - Public API: generateDependencyGraph(opts) => { graph, stats, errors }.
  * - Universe scan defines source nodes (with size + sha256 hash).
  * - Graceful degradation when TypeScript peer dependency is missing:
  *   return a nodes-only graph with complete empty edges map.
+ * - Optional node descriptions for TS/JS nodes are derived from doc comments.
+ * - Runtime option maxErrors caps output error volume deterministically.
  */
 
 import path from 'node:path';
 
+import { applyNodeDescriptions } from './core/descriptions';
+import { capErrors } from './core/errors';
 import { finalizeGraph } from './core/finalize';
 import { planIncremental } from './core/incremental';
 import { makeHashedFileNode } from './core/nodes';
 import { scanUniverseFiles } from './core/universe';
 import { analyzeTypeScript } from './providers/ts/analyze';
+import { describeTsJsModule } from './providers/ts/describe';
 import { tryLoadTypeScript } from './providers/ts/load';
 import { loadCompilerOptions } from './providers/ts/tsconfig';
 import type {
@@ -23,6 +28,9 @@ import type {
   GraphResult,
   NodeId,
 } from './types';
+
+const DEFAULT_NODE_DESCRIPTION_LIMIT = 160;
+const DEFAULT_MAX_ERRORS = 50;
 
 const isAnalyzableSource = (id: string): boolean => {
   const lower = id.toLowerCase();
@@ -40,6 +48,14 @@ export const generateDependencyGraph = async (
 ): Promise<GraphResult> => {
   const errors: string[] = [];
   const cwd = opts.cwd;
+
+  const nodeDescriptionLimit =
+    typeof opts.nodeDescriptionLimit === 'number'
+      ? opts.nodeDescriptionLimit
+      : DEFAULT_NODE_DESCRIPTION_LIMIT;
+
+  const maxErrors =
+    typeof opts.maxErrors === 'number' ? opts.maxErrors : DEFAULT_MAX_ERRORS;
 
   const universeIds = await scanUniverseFiles({ cwd, config: opts.config });
   const analyzableSourceIds = universeIds.filter(isAnalyzableSource);
@@ -75,10 +91,19 @@ export const generateDependencyGraph = async (
     errors.push(
       'typescript peer dependency not found; returning nodes-only graph',
     );
-    const graph: DependencyGraph = finalizeGraph({
+
+    const describedNodes = await applyNodeDescriptions({
+      cwd,
       nodes: baseNodes,
+      nodeDescriptionLimit,
+      describeSourceText: describeTsJsModule,
+    });
+
+    const graph: DependencyGraph = finalizeGraph({
+      nodes: describedNodes,
       edges: edgesBase,
     });
+
     return {
       graph,
       stats: {
@@ -86,7 +111,7 @@ export const generateDependencyGraph = async (
         edges: Object.values(graph.edges).reduce((n, es) => n + es.length, 0),
         dirty: inc.dirtySourceIds.size,
       },
-      errors,
+      errors: capErrors(errors, maxErrors),
     };
   }
 
@@ -106,8 +131,15 @@ export const generateDependencyGraph = async (
     ...analyzed.edgesBySource,
   };
 
-  const graph: DependencyGraph = finalizeGraph({
+  const describedNodes = await applyNodeDescriptions({
+    cwd,
     nodes: analyzed.nodes,
+    nodeDescriptionLimit,
+    describeSourceText: describeTsJsModule,
+  });
+
+  const graph: DependencyGraph = finalizeGraph({
+    nodes: describedNodes,
     edges: mergedEdges,
   });
 
@@ -118,6 +150,6 @@ export const generateDependencyGraph = async (
       edges: Object.values(graph.edges).reduce((n, es) => n + es.length, 0),
       dirty: inc.dirtySourceIds.size,
     },
-    errors: [...errors, ...analyzed.errors],
+    errors: capErrors([...errors, ...analyzed.errors], maxErrors),
   };
 };

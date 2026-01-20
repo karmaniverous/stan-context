@@ -3,6 +3,7 @@
  * - Define a deterministic, JSON-serializable DependencyGraph schema.
  * - Support NodeId semantics for source/external/builtin/missing nodes.
  * - Keep metadata sparse (omit null/false fields).
+ * - Optional node descriptions are one-line summaries for TS/JS modules.
  */
 
 export type NodeId = string;
@@ -20,6 +21,7 @@ export type GraphNode = {
   id: NodeId;
   kind: GraphNodeKind;
   language: GraphLanguage;
+  description?: string;
   metadata?: GraphNodeMetadata;
 };
 
@@ -45,6 +47,16 @@ export type GraphOptions = {
     anchors?: string[];
   };
   previousGraph?: DependencyGraph;
+  /**
+   * Maximum length of GraphNode.description (TS/JS only). Uses ASCII `...` when
+   * truncated. Set to 0 to omit descriptions.
+   */
+  nodeDescriptionLimit?: number;
+  /**
+   * Maximum number of GraphResult.errors entries returned. When truncated, the
+   * final entry is a deterministic sentinel. Set to 0 to omit errors.
+   */
+  maxErrors?: number;
 };
 
 export type GraphResult = {

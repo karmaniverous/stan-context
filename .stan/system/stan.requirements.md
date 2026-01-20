@@ -54,6 +54,11 @@ export type GraphNode = {
   id: NodeId;
   kind: GraphNodeKind;
   language: GraphLanguage;
+  /**
+   * Optional one-line summary for the node (TS/JS only).
+   * Omitted when no suitable module documentation is available.
+   */
+  description?: string;
   metadata?: GraphNodeMetadata;
 };
 
@@ -95,6 +100,32 @@ export type DependencyGraph = {
   - `builtin` and `missing` nodes MUST NOT have `metadata.hash` (omit).
 - Outside-root:
   - Any node whose resolved physical path is outside `cwd` MUST set `metadata.isOutsideRoot: true`.
+
+### Description requirements (TS/JS only; optional)
+
+- `GraphNode.description` is optional and SHOULD be omitted unless it provides useful summary information.
+- Description gathering is invoked by core orchestration but implemented by the TS/JS provider.
+- Description eligibility:
+  - Node kind MUST be `source` or `external`.
+  - Node language MUST be `ts` or `js` (including `.d.ts` as `ts`).
+- Source annotation:
+  - The provider MUST look for a `/** ... */` doc comment containing either:
+    - `@module`, or
+    - `@packageDocumentation`.
+  - The description MUST be derived from the prose portion of that same doc comment.
+  - The tag text itself MUST NOT be used as the description.
+  - If the prose resolves to an empty string after cleanup, omit the description.
+- Cleanup/normalization:
+  - Strip comment markup (`/**`, `*/`, leading `*`).
+  - Remove tag lines (`@...`).
+  - Best-effort remove common inline markup (e.g., `{@link ...}`, Markdown links, inline code backticks).
+  - Normalize to a single line (collapse whitespace to single spaces and trim).
+- Candidate selection:
+  - If both `@module` and `@packageDocumentation` candidates are present, choose whichever yields the longer result after cleanup + truncation.
+  - Tie-break: choose the `@module` candidate.
+- Truncation:
+  - The provider MUST truncate to `nodeDescriptionLimit` characters and append ASCII `...` when truncated.
+  - If `nodeDescriptionLimit < 4`, descriptions SHOULD be omitted.
 
 ### Edge requirements
 
@@ -179,26 +210,15 @@ JSON imports:
 
 #### Re-export resolution strategy (robustness requirement)
 
-Re-export barrels are primarily a *syntactic forwarding graph* (e.g.,
-`export { X } from './x'`, `export type { X } from './x'`, `export * from './x'`).
-To avoid brittle behavior across TypeScript versions and `.d.ts` externals, the
-TS provider MUST implement tunneling through re-exports using an AST-first
-strategy:
+Re-export barrels are primarily a _syntactic forwarding graph_ (e.g., `export { X } from './x'`, `export type { X } from './x'`, `export * from './x'`). To avoid brittle behavior across TypeScript versions and `.d.ts` externals, the TS provider MUST implement tunneling through re-exports using an AST-first strategy:
 
 - For named re-exports (`export { X } from './x'` and `export type { X } from './x'`):
-  - Treat the `moduleSpecifier` and exported-name mapping as the primary source
-    of truth.
-  - Follow the forwarding chain deterministically (barrel → target module →
-    next re-export, etc.) until reaching a defining module.
+  - Treat the `moduleSpecifier` and exported-name mapping as the primary source of truth.
+  - Follow the forwarding chain deterministically (barrel → target module → next re-export, etc.) until reaching a defining module.
 - For star re-exports (`export * from './x'`):
-  - Use a focused lookup to determine whether the target module exports the
-    requested name, then recurse into that module.
-  - The TypeChecker MAY be used for this membership check, but it SHOULD be
-    limited in scope and memoized/cached to avoid creating a fragile “symbol
-    chase” dependency.
-- Symbol/alias chasing via the TypeChecker MUST NOT be the primary mechanism
-  for resolving re-export chains (it is acceptable only as a fallback for
-  “defining declaration files” once the correct target module is identified).
+  - Use a focused lookup to determine whether the target module exports the requested name, then recurse into that module.
+  - The TypeChecker MAY be used for this membership check, but it SHOULD be limited in scope and memoized/cached to avoid creating a fragile “symbol chase” dependency.
+- Symbol/alias chasing via the TypeChecker MUST NOT be the primary mechanism for resolving re-export chains (it is acceptable only as a fallback for “defining declaration files” once the correct target module is identified).
 
 ### External dependencies (“Commander rule”)
 
@@ -208,7 +228,8 @@ strategy:
   - If the external entry point is a barrel that re-exports from files within the same package, follow those re-exports and include those internal package files as external nodes/edges.
   - Boundary: “same package” is defined by nearest `package.json`. Stop when re-exports cross into a different nearest-`package.json` context.
 - Workspace/monorepo linking:
-  - If a resolved dependency is physically within the repo root and is not under `node_modules/**`, treat it as `source`.
+  - If a resolved dependency is physically within the repo root and is not under `node_modules/**`, treat it as `source`.
+
 ## Incrementalism (previousGraph)
 
 - `generateDependencyGraph` accepts `previousGraph` for incremental rebuilds.
@@ -237,6 +258,8 @@ export type GraphOptions = {
     anchors?: string[];
   };
   previousGraph?: DependencyGraph;
+  nodeDescriptionLimit?: number;
+  maxErrors?: number;
 };
 
 export type GraphResult = {
@@ -262,5 +285,12 @@ export function generateDependencyGraph(
 - Distribution outputs:
   - Runtime JS MUST be emitted as ESM (e.g., `dist/mjs/**`).
   - Types MUST be emitted (e.g., `dist/types/**`).
-- Consumers that use `require()` are out of scope (they should receive an
-  “exports not defined” / ESM-only failure).
+- Consumers that use `require()` are out of scope (they should receive an “exports not defined” / ESM-only failure).
+
+## Runtime configuration knobs (non-semantic)
+
+- `nodeDescriptionLimit` (default: 160)
+  - Limits GraphNode.description length; 0 disables descriptions.
+- `maxErrors` (default: 50)
+  - Limits GraphResult.errors length; 0 disables errors output.
+  - When truncation occurs, the last entry MUST be a deterministic sentinel.

@@ -3,7 +3,18 @@ import { withTempDir, writeFile } from '../test/temp';
 describe('generateDependencyGraph', () => {
   test('returns nodes-only graph when TypeScript is missing', async () => {
     await withTempDir(async (cwd) => {
-      await writeFile(cwd, 'a.ts', 'export const x = 1;\n');
+      await writeFile(
+        cwd,
+        'a.ts',
+        [
+          '/**',
+          ' * @module',
+          ' * This is the module summary.',
+          ' */',
+          'export const x = 1;',
+          '',
+        ].join('\n'),
+      );
 
       vi.resetModules();
       vi.doMock('./providers/ts/load', () => {
@@ -20,6 +31,9 @@ describe('generateDependencyGraph', () => {
       );
       expect(res.graph.nodes['a.ts']).toBeTruthy();
       expect(res.graph.edges['a.ts']).toEqual([]);
+      expect(res.graph.nodes['a.ts'].description).toBe(
+        'This is the module summary.',
+      );
 
       // edges map must be complete: key for every node
       for (const id of Object.keys(res.graph.nodes)) {

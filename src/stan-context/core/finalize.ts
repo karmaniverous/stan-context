@@ -3,6 +3,7 @@
  * - Deterministic serialization: sorted node keys, complete edges map.
  * - Edge de-duplication and deterministic edge ordering.
  * - Sparse metadata normalization with stable key insertion order.
+ * - Node descriptions are normalized (trimmed) and omitted when empty.
  */
 
 import type { DependencyGraph, GraphEdge, GraphNode, NodeId } from '../types';
@@ -23,10 +24,15 @@ const normalizeNode = (n: GraphNode): GraphNode => {
         size: n.metadata.size,
       })
     : undefined;
+  const description =
+    typeof n.description === 'string' && n.description.trim()
+      ? n.description.trim()
+      : undefined;
   return makeNode({
     id: n.id,
     kind: n.kind,
     language: n.language,
+    ...(description ? { description } : {}),
     ...(md ? { metadata: md } : {}),
   });
 };

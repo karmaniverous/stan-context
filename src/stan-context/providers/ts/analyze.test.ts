@@ -167,7 +167,15 @@ describe('TypeScript provider (integration)', () => {
       await writeFile(
         cwd,
         'node_modules/pkg/index.d.ts',
-        `export { A } from './a';\nexport { B } from 'other';\n`,
+        [
+          '/**',
+          ' * @module',
+          ' * External package entrypoint for pkg.',
+          ' */',
+          `export { A } from './a';`,
+          `export { B } from 'other';`,
+          '',
+        ].join('\n'),
       );
       await writeFile(
         cwd,
@@ -203,6 +211,10 @@ describe('TypeScript provider (integration)', () => {
       expect(t).toContain('explicit:runtime:node_modules/pkg/index.d.ts');
       expect(t).toContain('implicit:runtime:node_modules/pkg/a.d.ts');
       expect(t).not.toContain('implicit:runtime:node_modules/other/index.d.ts');
+
+      expect(res.graph.nodes['node_modules/pkg/index.d.ts'].description).toBe(
+        'External package entrypoint for pkg.',
+      );
     });
   });
 });
