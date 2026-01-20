@@ -77,4 +77,32 @@ export const x = 1;
       'Longer description wins over earlier empty tag.',
     );
   });
+
+  test('ignores docblock-shaped sequences inside strings', () => {
+    const sourceText = `
+const s = \`/** @module */\`;
+export const x = 1;
+void s;
+`;
+    expect(describeTsJsModule({ sourceText, nodeDescriptionLimit: 160 })).toBe(
+      undefined,
+    );
+  });
+
+  test('supports arbitrary @tags when configured', () => {
+    const sourceText = `
+/**
+ * @foo
+ * Foo description.
+ */
+export const x = 1;
+`;
+    expect(
+      describeTsJsModule({
+        sourceText,
+        nodeDescriptionLimit: 160,
+        tags: ['@foo'],
+      }),
+    ).toBe('Foo description.');
+  });
 });

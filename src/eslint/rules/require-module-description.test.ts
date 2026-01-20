@@ -61,6 +61,16 @@ describe('eslint rule: require-module-description', () => {
     expect(msgs).toEqual([]);
   });
 
+  test('does not treat docblocks inside strings as real docs', () => {
+    const msgs = run({
+      sourceText: 'const s = `/** @module */`;\nexport const x = 1;\nvoid s;\n',
+    });
+    expect(msgs).toHaveLength(1);
+    expect(msgs[0]).toContain('@module');
+    expect(msgs[0]).toContain('@packageDocumentation');
+    expect(msgs[0]).not.toContain('Found @module but prose is empty');
+  });
+
   test('respects tags option (module-only)', () => {
     const msgs = run({
       sourceText: `/**\n * @packageDocumentation\n * Some prose.\n */\nexport const x = 1;\n`,

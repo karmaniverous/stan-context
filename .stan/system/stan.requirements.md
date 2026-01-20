@@ -127,6 +127,8 @@ export type DependencyGraph = {
   - The provider MUST scan all doc blocks for each configured tag and choose the usable candidate with the longest cleaned prose (highest entropy).
   - Among configured tags, choose the candidate that yields the longer final description string after truncation.
   - Tie-break: choose the earliest tag in the configured tag list.
+- Docblock detection correctness:
+  - The provider MUST ignore doc-comment-shaped sequences that appear inside string literals and template literals (e.g., `` `/** @module */` ``).
 
 ### Edge requirements
 

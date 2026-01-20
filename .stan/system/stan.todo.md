@@ -73,4 +73,6 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 - Added exported ESLint rule for module doc prose.
 - Fixed ESLint rule reporting + SSR test instability.
 - Improved eslint rule messaging and report location.
-- Made doc-tag extraction and eslint rule tag-agnostic.- Fixed typed-lint issues in eslint rule implementation.
+- Made doc-tag extraction and eslint rule tag-agnostic.
+- Fixed typed-lint issues in eslint rule implementation.
+- Added shared docblock scanner to ignore strings.

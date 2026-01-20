@@ -75,11 +75,10 @@ Incremental usage:
 Runtime options:
 
 - `nodeDescriptionLimit` (default: 160)
-  - Produces `GraphNode.description` for TS/JS nodes based on a `/** ... */` doc comment containing `@module` or `@packageDocumentation`.
+  - Produces `GraphNode.description` for TS/JS nodes based on a real `/** ... */` doc comment containing `@module` or `@packageDocumentation`.
   - Uses the prose portion only (tag text is ignored).
   - Normalizes to a single line; when truncated, keeps a prefix of `nodeDescriptionLimit` characters and appends ASCII `...` (ellipsis not counted in the prefix).
-  - Set to `0` to omit descriptions entirely.
-- `nodeDescriptionTags` (default: `['@module', '@packageDocumentation']`)
+  - Set to `0` to omit descriptions entirely.- `nodeDescriptionTags` (default: `['@module', '@packageDocumentation']`)
   - Controls which TSDoc tags are considered for description extraction (TS/JS only).
   - Tags MUST include the `@` prefix and match `^@\\w+$`.
 - `maxErrors` (default: 50)
