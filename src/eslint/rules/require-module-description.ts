@@ -1,11 +1,12 @@
 /**
  * Requirements addressed:
  * - Export an ESLint rule that warns when a TS/JS module has neither a usable
- *   `@module` nor `@packageDocumentation` doc tag (configurable).
+ *   doc tag (configurable) nor non-empty prose for that tag after cleanup.
  * - "Usable" is defined by the same prose extraction rules used by
  *   GraphNode.description (prose-only; cleanup; single-line; truncation).
- * - Warn by default (consumer-configured); produce a clear message that
- *   reflects the configured tag set and distinguishes missing vs empty prose.
+ * - Tag configuration is tag-agnostic:
+ *   - Tags are strict `@`-prefixed strings matching `^@\\w+$`.
+ *   - Defaults are provided by the shared `normalizeDocTags` helper.
  *
  * UX notes:
  * - Avoid redundant “Tag(s) missing …” messaging when the configured tags are
@@ -26,6 +27,24 @@ type Options = Array<{
   tags?: string[];
 }>;
 
+type SourceLocation = {
+  start: { line: number; column: number };
+  end: { line: number; column: number };
+};
+
+type CommentLike = { type: string; value: string; loc: SourceLocation | null };
+type TokenLike = { loc: SourceLocation | null };
+
+type SourceCodeLike = {
+  text: string;
+  ast: { body: unknown[] };
+  getAllComments: () => CommentLike[];
+  getFirstToken: (node: unknown) => TokenLike | null;
+};
+
+const getSourceCode = (context: Rule.RuleContext): SourceCodeLike =>
+  (context as unknown as { sourceCode: SourceCodeLike }).sourceCode;
+
 const formatTagList = (tags: string[]): string => {
   if (tags.length === 0) return '@module';
   if (tags.length === 1) return tags[0];
@@ -44,22 +63,11 @@ const hasUsableDocForAnyTag = (sourceText: string, tags: string[]) => {
   return { usable, results };
 };
 
-type SourceCodeLike = {
-  text: string;
-  ast?: { body?: unknown[] };
-  getAllComments?: () => Array<{
-    type: string;
-    value: string;
-    loc?: unknown;
-  }>;
-  getFirstToken?: (n: unknown) => { loc?: unknown } | null;
-};
-
 const findFirstDocCommentLocForTag = (
   sourceCode: SourceCodeLike,
   tag: string,
-): unknown | undefined => {
-  const comments = sourceCode.getAllComments ? sourceCode.getAllComments() : [];
+): SourceLocation | undefined => {
+  const comments = sourceCode.getAllComments();
   // For `/** ... */` comments, ESLint exposes `value` without delimiters and it
   // begins with `*`.
   const found = comments.find(
@@ -69,14 +77,17 @@ const findFirstDocCommentLocForTag = (
       c.value.startsWith('*') &&
       c.value.includes(tag),
   );
-  return found?.loc;
+  const loc = found?.loc ?? null;
+  return loc ?? undefined;
 };
 
-const getFirstTokenLoc = (sourceCode: SourceCodeLike): unknown | undefined => {
-  if (!sourceCode.getFirstToken) return undefined;
-  const firstNode = sourceCode.ast?.body?.[0] ?? sourceCode.ast;
-  const tok = sourceCode.getFirstToken(firstNode ?? {});
-  return tok?.loc;
+const getFirstTokenLoc = (
+  sourceCode: SourceCodeLike,
+): SourceLocation | undefined => {
+  const firstNode = sourceCode.ast.body[0] ?? sourceCode.ast;
+  const tok = sourceCode.getFirstToken(firstNode);
+  const loc = tok?.loc ?? null;
+  return loc ?? undefined;
 };
 
 export const requireModuleDescriptionRule: Rule.RuleModule = {
@@ -84,7 +95,7 @@ export const requireModuleDescriptionRule: Rule.RuleModule = {
     type: 'suggestion',
     docs: {
       description:
-        'Require usable module documentation prose in @module/@packageDocumentation.',
+        'Require usable module documentation prose for configured @tags.',
     },
     schema: [
       {
@@ -101,14 +112,15 @@ export const requireModuleDescriptionRule: Rule.RuleModule = {
     ],
   },
   create(context) {
-    const opts = (context.options as Options) ?? [];
-    const opt = opts[0];
+    const opts = context.options as Options;
+    const opt = opts.length ? opts[0] : undefined;
+
     const tags = normalizeDocTags(opt?.tags);
     const wanted = formatTagList(tags);
 
     return {
       Program(node) {
-        const sourceCode = context.getSourceCode() as unknown as SourceCodeLike;
+        const sourceCode = getSourceCode(context);
         const sourceText = sourceCode.text;
 
         const { usable, results } = hasUsableDocForAnyTag(sourceText, tags);
@@ -133,20 +145,19 @@ export const requireModuleDescriptionRule: Rule.RuleModule = {
           const loc =
             findFirstDocCommentLocForTag(sourceCode, presentButEmpty[0]) ??
             getFirstTokenLoc(sourceCode);
-          context.report(
-            (loc
-              ? { node, loc, message }
-              : { node, message }) as unknown as Rule.ReportDescriptor,
-          );
+
+          const desc = (loc
+            ? { node, loc, message }
+            : { node, message }) as unknown as Rule.ReportDescriptor;
+          context.report(desc);
           return;
         }
 
         const loc = getFirstTokenLoc(sourceCode);
-        context.report(
-          (loc
-            ? { node, loc, message }
-            : { node, message }) as unknown as Rule.ReportDescriptor,
-        );
+        const desc = (loc
+          ? { node, loc, message }
+          : { node, message }) as unknown as Rule.ReportDescriptor;
+        context.report(desc);
       },
     };
   },

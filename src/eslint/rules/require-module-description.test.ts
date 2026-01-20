@@ -6,9 +6,21 @@ const run = (args: {
 }): string[] => {
   const messages: string[] = [];
 
+  const sourceCode = {
+    text: args.sourceText,
+    ast: { type: 'Program', body: [] },
+    getAllComments: () => [],
+    getFirstToken: () => ({
+      loc: {
+        start: { line: 1, column: 0 },
+        end: { line: 1, column: 1 },
+      },
+    }),
+  };
+
   const ctx = {
     options: args.options ?? [],
-    getSourceCode: () => ({ text: args.sourceText }),
+    sourceCode,
     report: ({ message }: { node: unknown; message: string }) =>
       messages.push(message),
   } as unknown as Parameters<typeof requireModuleDescriptionRule.create>[0];
