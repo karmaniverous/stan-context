@@ -9,6 +9,7 @@
  * - When multiple candidates exist, prefer higher-entropy prose:
  *   choose the longest cleaned prose; tie breaks by configured tag order.
  * - Docblocks MUST ignore comment-shaped sequences inside strings/templates.
+ * - Truncation MUST be strict prefix-N (no trimming after slicing).
  */
 
 import { scanDocBlocks } from './docblocks';
@@ -97,7 +98,7 @@ const truncateWithEllipsis = (text: string, prefixLimit: number): string => {
 
   if (text.length <= limit) return text;
 
-  const head = text.slice(0, limit).trimEnd();
+  const head = text.slice(0, limit);
   return `${head}...`;
 };
 

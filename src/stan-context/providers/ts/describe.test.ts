@@ -37,6 +37,20 @@ export const x = 1;
     expect(out).toBe('Use FooType and bar() pl...');
   });
 
+  test('truncates to a strict prefix (no trimEnd)', () => {
+    const sourceText = `
+/**
+ * @module
+ * abc def
+ */
+export const x = 1;
+`;
+    // N = 4 cuts after "abc " (space). Strict prefix keeps the space.
+    expect(describeTsJsModule({ sourceText, nodeDescriptionLimit: 4 })).toBe(
+      'abc ...',
+    );
+  });
+
   test('prefers higher-entropy result after truncation; tie -> @module', () => {
     const sourceText = `
 /**

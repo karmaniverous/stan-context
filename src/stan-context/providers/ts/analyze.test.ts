@@ -95,6 +95,123 @@ describe('TypeScript provider (integration)', () => {
     });
   });
 
+  test('import->export forwarding tunnels (named)', async () => {
+    await withTempDir(async (cwd) => {
+      await writeFile(
+        cwd,
+        'tsconfig.json',
+        JSON.stringify(
+          {
+            compilerOptions: {
+              target: 'ES2022',
+              module: 'ESNext',
+              moduleResolution: 'Node16',
+            },
+          },
+          null,
+          2,
+        ),
+      );
+
+      await writeFile(cwd, 'a.ts', `export const A = 1;\n`);
+      await writeFile(
+        cwd,
+        'barrel.ts',
+        `import { A as B } from './a';\nexport { B as C };\n`,
+      );
+      await writeFile(
+        cwd,
+        'use.ts',
+        `import { C } from './barrel';\nvoid C;\n`,
+      );
+
+      const generateDependencyGraph = await loadGenerateDependencyGraph();
+      const res = await generateDependencyGraph({ cwd });
+      const t = targets(res.graph, 'use.ts');
+
+      expect(t).toContain('explicit:runtime:barrel.ts');
+      expect(t).toContain('implicit:runtime:a.ts');
+    });
+  });
+
+  test('import->export forwarding tunnels (default)', async () => {
+    await withTempDir(async (cwd) => {
+      await writeFile(
+        cwd,
+        'tsconfig.json',
+        JSON.stringify(
+          {
+            compilerOptions: {
+              target: 'ES2022',
+              module: 'ESNext',
+              moduleResolution: 'Node16',
+            },
+          },
+          null,
+          2,
+        ),
+      );
+
+      await writeFile(cwd, 'a.ts', `export default function () { return 1 }\n`);
+      await writeFile(
+        cwd,
+        'barrel.ts',
+        `import Foo from './a';\nexport { Foo as Bar };\n`,
+      );
+      await writeFile(
+        cwd,
+        'use.ts',
+        `import { Bar } from './barrel';\nvoid Bar;\n`,
+      );
+
+      const generateDependencyGraph = await loadGenerateDependencyGraph();
+      const res = await generateDependencyGraph({ cwd });
+      const t = targets(res.graph, 'use.ts');
+
+      expect(t).toContain('explicit:runtime:barrel.ts');
+      expect(t).toContain('implicit:runtime:a.ts');
+    });
+  });
+
+  test('namespace forwarding tunnels to module file only', async () => {
+    await withTempDir(async (cwd) => {
+      await writeFile(
+        cwd,
+        'tsconfig.json',
+        JSON.stringify(
+          {
+            compilerOptions: {
+              target: 'ES2022',
+              module: 'ESNext',
+              moduleResolution: 'Node16',
+            },
+          },
+          null,
+          2,
+        ),
+      );
+
+      await writeFile(cwd, 'a.ts', `export const x = 1;\n`);
+      await writeFile(
+        cwd,
+        'barrel.ts',
+        `import * as Ns from './a';\nexport { Ns };\n`,
+      );
+      await writeFile(
+        cwd,
+        'use.ts',
+        `import { Ns } from './barrel';\nvoid Ns;\n`,
+      );
+
+      const generateDependencyGraph = await loadGenerateDependencyGraph();
+      const res = await generateDependencyGraph({ cwd });
+      const t = targets(res.graph, 'use.ts');
+
+      expect(t).toContain('explicit:runtime:barrel.ts');
+      expect(t).toContain('implicit:runtime:a.ts');
+    });
+  });
+
   test('builtins normalize to node:fs and missing creates missing node id', async () => {
     await withTempDir(async (cwd) => {
       await writeFile(

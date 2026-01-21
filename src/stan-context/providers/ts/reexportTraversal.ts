@@ -7,6 +7,9 @@
  *   export name locally (not merely forwarding it).
  * - `export * from './x'` participates in tunneling; avoid infinite recursion
  *   via cycle detection and memoization.
+ * - Forwarding MUST include “import then export” patterns, including namespace
+ *   forwarding as a module-level target.
+ * - `export default function/class` MUST be treated as defining `default`.
  */
 
 import type * as tsLib from 'typescript';
@@ -17,15 +20,25 @@ export type ResolveAbsPath = (
 ) => string | null;
 export type GetSourceFile = (absPath: string) => tsLib.SourceFile | undefined;
 
-export type DefiningExport = {
-  absPath: string;
-  /**
-   * Export name as it exists in the defining module.
-   * Example: `export { A as B } from './a'` means requesting `B` resolves to
-   * defining module `./a` with `exportName: 'A'`.
-   */
-  exportName: string;
-};
+export type DefiningExport =
+  | {
+      kind: 'symbol';
+      absPath: string;
+      /**
+       * Export name as it exists in the defining module.
+       * Example: `export { A as B } from './a'` means requesting `B` resolves to
+       * defining module `./a` with `exportName: 'A'`.
+       */
+      exportName: string;
+    }
+  | {
+      /**
+       * Namespace forwarding resolves to a module-level dependency (not a
+       * symbol-level export name).
+       */
+      kind: 'module';
+      absPath: string;
+    };
 
 export type ReexportTraversalCache = {
   memo: Map<string, DefiningExport[]>;
@@ -49,10 +62,18 @@ const moduleExportNameToText = (
   return ts.isIdentifier(n) ? n.text : n.text;
 };
 
-const hasExportModifier = (ts: typeof tsLib, n: tsLib.Node): boolean => {
+const hasModifierKind = (
+  ts: typeof tsLib,
+  n: tsLib.Node,
+  kind: tsLib.SyntaxKind,
+): boolean => {
   if (!ts.canHaveModifiers(n)) return false;
   const mods = ts.getModifiers(n);
-  return mods?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword) ?? false;
+  return mods?.some((m) => m.kind === kind) ?? false;
+};
+
+const hasExportModifier = (ts: typeof tsLib, n: tsLib.Node): boolean => {
+  return hasModifierKind(ts, n, ts.SyntaxKind.ExportKeyword);
 };
 
 const collectLocalTopLevelDeclarationNames = (args: {
@@ -81,6 +102,53 @@ const collectLocalTopLevelDeclarationNames = (args: {
   return names;
 };
 
+type ImportedBinding =
+  | { kind: 'named'; specifier: string; importName: string }
+  | { kind: 'default'; specifier: string }
+  | { kind: 'namespace'; specifier: string };
+
+const collectImportBindings = (args: {
+  ts: typeof tsLib;
+  sourceFile: tsLib.SourceFile;
+}): Map<string, ImportedBinding> => {
+  const { ts, sourceFile } = args;
+  const out = new Map<string, ImportedBinding>();
+
+  for (const s of sourceFile.statements) {
+    if (!ts.isImportDeclaration(s)) continue;
+    if (!s.importClause) continue;
+    if (!isStringLiteralLike(ts, s.moduleSpecifier)) continue;
+    const specifier = s.moduleSpecifier.text;
+
+    // default import: import Foo from './x'
+    if (s.importClause.name) {
+      out.set(s.importClause.name.text, { kind: 'default', specifier });
+    }
+
+    const nb = s.importClause.namedBindings;
+    if (!nb) continue;
+
+    // namespace import: import * as Ns from './x'
+    if (ts.isNamespaceImport(nb)) {
+      out.set(nb.name.text, { kind: 'namespace', specifier });
+      continue;
+    }
+
+    // named imports: import { A as B } from './x'
+    if (ts.isNamedImports(nb)) {
+      for (const el of nb.elements) {
+        const local = el.name.text;
+        const importName = el.propertyName
+          ? moduleExportNameToText(ts, el.propertyName)
+          : el.name.text;
+        out.set(local, { kind: 'named', specifier, importName });
+      }
+    }
+  }
+
+  return out;
+};
+
 const sourceFileDefinesExportName = (args: {
   ts: typeof tsLib;
   sourceFile: tsLib.SourceFile;
@@ -92,6 +160,18 @@ const sourceFileDefinesExportName = (args: {
   if (exportName === 'default') {
     for (const s of sourceFile.statements) {
       if (ts.isExportAssignment(s) && s.isExportEquals !== true) return true;
+      if (
+        ts.isFunctionDeclaration(s) &&
+        hasExportModifier(ts, s) &&
+        hasModifierKind(ts, s, ts.SyntaxKind.DefaultKeyword)
+      )
+        return true;
+      if (
+        ts.isClassDeclaration(s) &&
+        hasExportModifier(ts, s) &&
+        hasModifierKind(ts, s, ts.SyntaxKind.DefaultKeyword)
+      )
+        return true;
     }
     return false;
   }
@@ -135,35 +215,79 @@ const sourceFileDefinesExportName = (args: {
   return false;
 };
 
-const collectReexportTargetsForName = (args: {
+type ForwardTarget =
+  | { kind: 'symbol'; specifier: string; importName: string }
+  | { kind: 'module'; specifier: string };
+
+const collectForwardingTargetsForName = (args: {
   ts: typeof tsLib;
   sourceFile: tsLib.SourceFile;
   exportName: string;
-}): Array<{ specifier: string; importName: string }> => {
+  localNames: Set<string>;
+  imports: Map<string, ImportedBinding>;
+}): ForwardTarget[] => {
   const { ts, sourceFile, exportName } = args;
-  const out: Array<{ specifier: string; importName: string }> = [];
+  const out: ForwardTarget[] = [];
 
   for (const s of sourceFile.statements) {
-    if (!ts.isExportDeclaration(s) || !s.moduleSpecifier) continue;
-    if (!isStringLiteralLike(ts, s.moduleSpecifier)) continue;
-    const spec = s.moduleSpecifier.text;
+    if (!ts.isExportDeclaration(s)) continue;
 
-    // `export * from './x'`
-    if (!s.exportClause) {
-      out.push({ specifier: spec, importName: exportName });
+    // --- Case 1: export ... from './x' (moduleSpecifier present) ---
+    if (s.moduleSpecifier && isStringLiteralLike(ts, s.moduleSpecifier)) {
+      const spec = s.moduleSpecifier.text;
+
+      // `export * from './x'`
+      if (!s.exportClause) {
+        out.push({ kind: 'symbol', specifier: spec, importName: exportName });
+        continue;
+      }
+
+      // `export * as Ns from './x'` (namespace export)
+      if (ts.isNamespaceExport(s.exportClause)) {
+        if (s.exportClause.name.text === exportName) {
+          out.push({ kind: 'module', specifier: spec });
+        }
+        continue;
+      }
+
+      // `export { X } from './x'` and `export type { X } from './x'`
+      if (ts.isNamedExports(s.exportClause)) {
+        for (const el of s.exportClause.elements) {
+          const exported = el.name.text;
+          if (exported !== exportName) continue;
+          const importName = el.propertyName
+            ? moduleExportNameToText(ts, el.propertyName)
+            : el.name.text;
+          out.push({ kind: 'symbol', specifier: spec, importName });
+        }
+      }
+
       continue;
     }
 
-    // `export { X } from './x'` and `export type { X } from './x'`
-    if (ts.isNamedExports(s.exportClause)) {
-      for (const el of s.exportClause.elements) {
-        const exported = el.name.text;
-        if (exported !== exportName) continue;
-        const importName = el.propertyName
-          ? moduleExportNameToText(ts, el.propertyName)
-          : el.name.text;
-        out.push({ specifier: spec, importName });
+    // --- Case 2: export { X } (no moduleSpecifier; may forward imported bindings) ---
+    if (!s.exportClause) continue;
+    if (!ts.isNamedExports(s.exportClause)) continue;
+
+    for (const el of s.exportClause.elements) {
+      const exported = el.name.text;
+      if (exported !== exportName) continue;
+
+      const local = el.propertyName
+        ? moduleExportNameToText(ts, el.propertyName)
+        : el.name.text;
+      if (args.localNames.has(local)) continue;
+
+      const imp = args.imports.get(local);
+      if (!imp) continue;
+
+      if (imp.kind === 'namespace') {
+        out.push({ kind: 'module', specifier: imp.specifier });
+        continue;
       }
+
+      const importName = imp.kind === 'default' ? 'default' : imp.importName;
+      out.push({ kind: 'symbol', specifier: imp.specifier, importName });
     }
   }
 
@@ -209,6 +333,7 @@ export const resolveDefiningExportsForName = (args: {
       ts,
       sourceFile,
     });
+    const imports = collectImportBindings({ ts, sourceFile });
 
     const out: DefiningExport[] = [];
 
@@ -220,24 +345,36 @@ export const resolveDefiningExportsForName = (args: {
         localNames,
       })
     ) {
-      out.push({ absPath: sourceFile.fileName, exportName });
+      out.push({ kind: 'symbol', absPath: sourceFile.fileName, exportName });
     }
 
-    // Follow re-export forwarding edges for this name.
-    const targets = collectReexportTargetsForName({
+    // Follow forwarding edges for this name (re-exports and import->export forwarding).
+    const targets = collectForwardingTargetsForName({
       ts,
       sourceFile,
       exportName,
+      localNames,
+      imports,
     });
     for (const t of targets) {
       const abs = resolveAbsPath(sourceFile.fileName, t.specifier);
       if (!abs) continue;
       const nextSf = getSourceFile(abs);
       if (!nextSf) continue;
+
+      if (t.kind === 'module') {
+        out.push({ kind: 'module', absPath: nextSf.fileName });
+        continue;
+      }
+
       out.push(...visit(nextSf, t.importName, stack));
     }
 
-    const uniq = uniqByKey(out, (d) => `${d.absPath}\0${d.exportName}`);
+    const uniq = uniqByKey(out, (d) =>
+      d.kind === 'module'
+        ? `module\0${d.absPath}`
+        : `symbol\0${d.absPath}\0${d.exportName}`,
+    );
     cache.memo.set(key, uniq);
     stack.delete(key);
     return uniq;

@@ -5,6 +5,7 @@
  * - Re-export barrels must be followed for both runtime and type exports:
  *   `export { X } from './x'` and `export type { X } from './x'`.
  * - `export * from './x'` must participate in tunneling for named imports.
+ * - Namespace forwarding resolves to a module-level dependency (module file only).
  * - External “commander rule” boundary filtering remains caller-controlled.
  * - Robustness: re-export resolution MUST be AST-first; the TypeChecker is used
  *   only to expand a defining module into its declaration file(s) (merged
@@ -59,6 +60,12 @@ export const getDeclarationFilesForBarrelExportNames = (args: {
     });
 
     for (const d of defining) {
+      // Namespace forwarding is a module-level dependency (no symbol lookup).
+      if (d.kind === 'module') {
+        out.add(d.absPath);
+        continue;
+      }
+
       const defSf = args.getSourceFile(d.absPath);
       if (!defSf) {
         out.add(d.absPath);

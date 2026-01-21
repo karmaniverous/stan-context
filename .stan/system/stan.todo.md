@@ -4,21 +4,6 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 
 ## Next up
 
-- Close the gap between requirements and implementation
-  - Description truncation
-    - Update truncation to strict “prefix N + ...” (no trimming after slicing).
-    - Add/adjust tests to prove exact prefix length behavior.
-  - Barrel traversal and tunneling
-    - Extend AST-first traversal to treat `export default function/class` as defining `default`.
-    - Support “import then export” forwarding barrels:
-      - named forwarding (`import { A as B } ...; export { B as C }`)
-      - default forwarding (`import Foo ...; export { Foo as Bar }`)
-      - namespace forwarding (`import * as Ns ...; export { Ns as NamedNs }`)
-    - Namespace forwarding semantics:
-      - emit module-level targets (implicit edge to the resolved module file only)
-      - do not attempt declaration expansion via symbol lookup for namespace objects
-  - Re-run the full suite (`lint`, `typecheck`, `test`, `build`, `docs`, `knip`) and confirm it is green.
-
 - Release readiness
   - Expect new ESLint warnings until TS/JS modules add usable prose for the chosen tags.
   - Re-run `npm run lint` and confirm no ESLint errors (warnings expected).
@@ -94,4 +79,4 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 - Wired docblock scanner into descriptions; fixed SSR test imports.
 - Fixed reexportTraversal test to use named exports (SSR).
 - Updated requirements and guide for tunneling ergonomics.
-- Updated dev plan to close requirements/implementation gaps.
+- Updated dev plan to close requirements/implementation gaps.- Closed req/impl gap: truncation + forwarding traversal.
