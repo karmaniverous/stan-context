@@ -35,7 +35,12 @@ const findNearestPackageRoot = (absFile: string): string | null => {
   return dir;
 };
 
-export const getDeclarationFilesForBarrelExportNames = (args: {
+/**
+ * Resolve tunneled file targets for requested export names.
+ *
+ * NOTE: Namespace forwarding yields a module-level target (module file only).
+ */
+export const getTunneledFilesForBarrelExportNames = (args: {
   ts: typeof tsLib;
   checker: tsLib.TypeChecker;
   barrelSourceFile: tsLib.SourceFile;

@@ -6,6 +6,17 @@ const loadGenerateDependencyGraph = async () => {
   return mod.generateDependencyGraph;
 };
 
+const writeTsconfig = async (
+  cwd: string,
+  compilerOptions: Record<string, unknown>,
+): Promise<void> => {
+  await writeFile(
+    cwd,
+    'tsconfig.json',
+    JSON.stringify({ compilerOptions }, null, 2),
+  );
+};
+
 const targets = (
   graph: Awaited<
     ReturnType<Awaited<ReturnType<typeof loadGenerateDependencyGraph>>>
@@ -17,22 +28,12 @@ const targets = (
 describe('TypeScript provider (integration)', () => {
   test('barrel tunneling emits explicit + implicit edges for type imports', async () => {
     await withTempDir(async (cwd) => {
-      await writeFile(
-        cwd,
-        'tsconfig.json',
-        JSON.stringify(
-          {
-            compilerOptions: {
-              target: 'ES2022',
-              module: 'ESNext',
-              moduleResolution: 'Node16',
-              strict: true,
-            },
-          },
-          null,
-          2,
-        ),
-      );
+      await writeTsconfig(cwd, {
+        target: 'ES2022',
+        module: 'ESNext',
+        moduleResolution: 'Node16',
+        strict: true,
+      });
 
       await writeFile(
         cwd,
@@ -61,21 +62,11 @@ describe('TypeScript provider (integration)', () => {
 
   test('namespace imports do not tunnel', async () => {
     await withTempDir(async (cwd) => {
-      await writeFile(
-        cwd,
-        'tsconfig.json',
-        JSON.stringify(
-          {
-            compilerOptions: {
-              target: 'ES2022',
-              module: 'ESNext',
-              moduleResolution: 'Node16',
-            },
-          },
-          null,
-          2,
-        ),
-      );
+      await writeTsconfig(cwd, {
+        target: 'ES2022',
+        module: 'ESNext',
+        moduleResolution: 'Node16',
+      });
 
       await writeFile(cwd, 'a.ts', `export const x = 1;\n`);
       await writeFile(cwd, 'barrel.ts', `export * from './a';\n`);
@@ -97,21 +88,11 @@ describe('TypeScript provider (integration)', () => {
 
   test('import->export forwarding tunnels (named)', async () => {
     await withTempDir(async (cwd) => {
-      await writeFile(
-        cwd,
-        'tsconfig.json',
-        JSON.stringify(
-          {
-            compilerOptions: {
-              target: 'ES2022',
-              module: 'ESNext',
-              moduleResolution: 'Node16',
-            },
-          },
-          null,
-          2,
-        ),
-      );
+      await writeTsconfig(cwd, {
+        target: 'ES2022',
+        module: 'ESNext',
+        moduleResolution: 'Node16',
+      });
 
       await writeFile(cwd, 'a.ts', `export const A = 1;\n`);
       await writeFile(
@@ -136,21 +117,11 @@ describe('TypeScript provider (integration)', () => {
 
   test('import->export forwarding tunnels (default)', async () => {
     await withTempDir(async (cwd) => {
-      await writeFile(
-        cwd,
-        'tsconfig.json',
-        JSON.stringify(
-          {
-            compilerOptions: {
-              target: 'ES2022',
-              module: 'ESNext',
-              moduleResolution: 'Node16',
-            },
-          },
-          null,
-          2,
-        ),
-      );
+      await writeTsconfig(cwd, {
+        target: 'ES2022',
+        module: 'ESNext',
+        moduleResolution: 'Node16',
+      });
 
       await writeFile(cwd, 'a.ts', `export default function () { return 1 }\n`);
       await writeFile(
@@ -175,21 +146,11 @@ describe('TypeScript provider (integration)', () => {
 
   test('namespace forwarding tunnels to module file only', async () => {
     await withTempDir(async (cwd) => {
-      await writeFile(
-        cwd,
-        'tsconfig.json',
-        JSON.stringify(
-          {
-            compilerOptions: {
-              target: 'ES2022',
-              module: 'ESNext',
-              moduleResolution: 'Node16',
-            },
-          },
-          null,
-          2,
-        ),
-      );
+      await writeTsconfig(cwd, {
+        target: 'ES2022',
+        module: 'ESNext',
+        moduleResolution: 'Node16',
+      });
 
       await writeFile(cwd, 'a.ts', `export const x = 1;\n`);
       await writeFile(
@@ -214,21 +175,11 @@ describe('TypeScript provider (integration)', () => {
 
   test('builtins normalize to node:fs and missing creates missing node id', async () => {
     await withTempDir(async (cwd) => {
-      await writeFile(
-        cwd,
-        'tsconfig.json',
-        JSON.stringify(
-          {
-            compilerOptions: {
-              target: 'ES2022',
-              module: 'ESNext',
-              moduleResolution: 'Node16',
-            },
-          },
-          null,
-          2,
-        ),
-      );
+      await writeTsconfig(cwd, {
+        target: 'ES2022',
+        module: 'ESNext',
+        moduleResolution: 'Node16',
+      });
 
       await writeFile(cwd, 'builtin.ts', `import fs from 'fs';\nvoid fs;\n`);
       await writeFile(cwd, 'miss.ts', `import x from './nope';\nvoid x;\n`);
@@ -256,21 +207,11 @@ describe('TypeScript provider (integration)', () => {
 
   test('external commander rule tunnels only within package boundary', async () => {
     await withTempDir(async (cwd) => {
-      await writeFile(
-        cwd,
-        'tsconfig.json',
-        JSON.stringify(
-          {
-            compilerOptions: {
-              target: 'ES2022',
-              module: 'ESNext',
-              moduleResolution: 'Node16',
-            },
-          },
-          null,
-          2,
-        ),
-      );
+      await writeTsconfig(cwd, {
+        target: 'ES2022',
+        module: 'ESNext',
+        moduleResolution: 'Node16',
+      });
 
       await writeFile(
         cwd,

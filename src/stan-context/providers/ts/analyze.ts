@@ -202,7 +202,7 @@ export const analyzeTypeScript = async (args: {
       const barrelSf = getAnySourceFile(resolved.absPath);
       if (!barrelSf) continue;
 
-      const decls = tunnel.getDeclarationFilesForBarrelExportNames({
+      const decls = tunnel.getTunneledFilesForBarrelExportNames({
         ts,
         checker,
         barrelSourceFile: barrelSf,

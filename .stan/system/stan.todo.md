@@ -79,4 +79,6 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 - Wired docblock scanner into descriptions; fixed SSR test imports.
 - Fixed reexportTraversal test to use named exports (SSR).
 - Updated requirements and guide for tunneling ergonomics.
-- Updated dev plan to close requirements/implementation gaps.- Closed req/impl gap: truncation + forwarding traversal.
+- Updated dev plan to close requirements/implementation gaps.
+- Closed req/impl gap: truncation + forwarding traversal.
+- SOLID/DRY: split traversal modules; renamed tunnel helper; DRY tests.
