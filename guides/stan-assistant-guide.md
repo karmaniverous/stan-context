@@ -78,13 +78,57 @@ Runtime options:
   - Produces `GraphNode.description` for TS/JS nodes based on a real `/** ... */` doc comment containing `@module` or `@packageDocumentation`.
   - Uses the prose portion only (tag text is ignored).
   - Normalizes to a single line; when truncated, keeps a prefix of `nodeDescriptionLimit` characters and appends ASCII `...` (ellipsis not counted in the prefix).
-  - Set to `0` to omit descriptions entirely.- `nodeDescriptionTags` (default: `['@module', '@packageDocumentation']`)
+  - Set to `0` to omit descriptions entirely.
+- `nodeDescriptionTags` (default: `['@module', '@packageDocumentation']`)
   - Controls which TSDoc tags are considered for description extraction (TS/JS only).
-  - Tags MUST include the `@` prefix and match `^@\\w+$`.
+  - Tags MUST include the `@` prefix and match `^@\w+$`.
 - `maxErrors` (default: 50)
   - Caps the number of returned `errors` entries to avoid runaway output.
   - When truncation occurs, the final entry is a deterministic sentinel string.
-  - Set to `0` to omit errors entirely.## Graph schema and invariants (high level)
+  - Set to `0` to omit errors entirely.
+
+## Authoring practices for STAN-enabled repos (recommended)
+
+These conventions are not required for correctness, but they materially improve the quality and precision of the dependency graph (and therefore improve STAN’s context selection).
+
+### Prefer named imports/exports over namespace patterns
+
+- Prefer named/default imports when you want precise tunneling:
+  - `import { Foo } from './barrel'`
+  - `import Foo from './barrel'`
+
+- Avoid namespace imports when you care about physical dependency precision:
+  - `import * as Ns from './barrel'` does not tunnel by design.
+  - It produces a coarser “depends on barrel” edge, which can cause broader context selection than necessary.
+
+### Prefer direct re-exports on package/barrel surfaces
+
+When hoisting internal modules to a package export surface (e.g., `index.ts`):
+
+- Prefer direct re-exports:
+  - `export { Foo } from './foo'`
+  - `export type { Foo } from './foo'`
+
+- “Import then export” forwarding is supported, but prefer direct re-exports for clarity and tooling-friendliness:
+  - `import { Foo } from './foo'; export { Foo };`
+
+- Namespace forwarding is supported but intentionally coarser:
+  - `import * as Ns from './foo'; export { Ns };`
+  - When consumers import `Ns`, stan-context treats it as a module-level dependency and tunnels only to the target module file (not to symbol-level declaration files). Prefer named exports when you want per-symbol precision.
+
+### Write usable module/package doc prose (helps both graph + ESLint)
+
+- Add real `/** ... */` doc comments with prose for module entrypoints and package documentation:
+  - Use `@module` and/or `@packageDocumentation` and include a short prose summary in the same docblock.
+  - Tag-only docblocks (no prose) are treated as unusable and will:
+    - omit `GraphNode.description`, and
+    - trigger `stan-context/require-module-description` warnings (if enabled).
+
+### Use type-only syntax to improve edge classification
+
+- Prefer `import type { T } from './x'` and `export type { T } from './x'` when the dependency is type-only. This improves the signal in `GraphEdge.kind`.
+
+## Graph schema and invariants (high level)
 
 The graph is deterministic and JSON-serializable:
 
@@ -158,3 +202,4 @@ For external entrypoints, tunneling is bounded:
 - Always persist and pass `previousGraph` if you want incremental behavior.
 - If you rely on TS analysis, ensure `typescript` is installed in the consuming environment (peer dependency).
 - Do not assume `node_modules/**` is in the Universe; it is implicitly excluded unless explicitly included (analysis may still discover external nodes via resolution).
+- If you want precise tunneling through barrels, avoid patterns that obscure the symbol-level dependency (especially namespace imports/exports). Prefer direct named re-exports and named imports to help stan-context produce the most actionable graph.

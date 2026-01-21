@@ -121,8 +121,10 @@ export type DependencyGraph = {
   - Best-effort remove common inline markup (e.g., `{@link ...}`, Markdown links, inline code backticks).
   - Normalize to a single line (collapse whitespace to single spaces and trim).
 - Truncation:
-  - The provider MUST truncate to a prefix of `nodeDescriptionLimit` characters and append ASCII `...` when truncated.
+  - The provider MUST truncate to a strict prefix of exactly `nodeDescriptionLimit` characters and append ASCII `...` when truncated.
   - The appended `...` is not counted toward `nodeDescriptionLimit`.
+  - No trimming or whitespace normalization is permitted after truncation slicing.
+    - Formally: if `text.length > N`, description is `text.slice(0, N) + '...'`.
 - Candidate selection (entropy):
   - The provider MUST scan all doc blocks for each configured tag and choose the usable candidate with the longest cleaned prose (highest entropy).
   - Among configured tags, choose the candidate that yields the longer final description string after truncation.
@@ -223,6 +225,24 @@ Re-export barrels are primarily a _syntactic forwarding graph_ (e.g., `export { 
   - The TypeChecker MAY be used for this membership check, but it SHOULD be limited in scope and memoized/cached to avoid creating a fragile “symbol chase” dependency.
 - Symbol/alias chasing via the TypeChecker MUST NOT be the primary mechanism for resolving re-export chains (it is acceptable only as a fallback for “defining declaration files” once the correct target module is identified).
 
+Additional forwarding forms (must be supported)
+
+- Default export definitions count as “defining” `default`:
+  - `export default <expr>` (export assignment)
+  - `export default function ...` and `export default class ...` (default modifiers)
+
+- “Import then export” forwarding MUST participate in traversal:
+  - `import { A as B } from './x'; export { B as C };`
+  - `import Foo from './x'; export { Foo as Bar };` (forwarded `default`)
+  - `import * as Ns from './x'; export { Ns as NamedNs };` (namespace forwarding)
+
+Namespace forwarding semantics (important)
+
+- When the requested export name resolves to a namespace binding that was imported via `import * as Ns from '<m>'` and re-exported (with or without renaming):
+  - The traversal MUST treat the target as the imported module `<m>` itself (module-level dependency), not as a symbol-level export name.
+  - Tunneling MUST emit an implicit edge to the resolved module file for `<m>`.
+  - The provider MUST NOT attempt to expand namespace forwarding into declaration files via symbol lookup (there is no meaningful “exportName” to resolve on the target module for the namespace object).
+
 ### External dependencies (“Commander rule”)
 
 - Default external behavior is shallow:
@@ -293,6 +313,24 @@ export function generateDependencyGraph(
   - Runtime JS MUST be emitted as ESM (e.g., `dist/mjs/**`).
   - Types MUST be emitted (e.g., `dist/types/**`).
 - Consumers that use `require()` are out of scope (they should receive an “exports not defined” / ESM-only failure).
+
+## ESLint plugin (published contract)
+
+- The package MUST publish an ESLint plugin subpath export:
+  - Import path: `@karmaniverous/stan-context/eslint`
+  - The default export is an ESLint plugin object with:
+    - `rules` containing `require-module-description`
+    - `configs.recommended` enabling `stan-context/require-module-description` at `warn`
+
+- Rule contract: `stan-context/require-module-description`
+  - Warns when a TS/JS module lacks usable module documentation prose.
+  - Tag selection is tag-agnostic and strict:
+    - configured tags MUST be `@`-prefixed and match `/^@\\w+$/`
+    - default tags are `@module` and `@packageDocumentation`
+  - Semantics MUST match `GraphNode.description` extraction:
+    - prose-only from a docblock containing a configured tag (tag text is not used)
+    - cleanup/normalization rules are the same
+    - docblock detection ignores comment-shaped sequences in strings/templates
 
 ## Runtime configuration knobs (non-semantic)
 
