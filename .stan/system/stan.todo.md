@@ -34,6 +34,7 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
   - `src/stan-context/providers/ts/extract.ts` — extract explicit deps + tunnel requests
   - `src/stan-context/providers/ts/tunnel.ts` — symbol-aware tunneling + commander boundary filter
   - `src/stan-context/providers/ts/analyze.ts` — analyze dirty sources and emit nodes/edges
+  - `src/stan-context/providers/ts/reexportTraversal/*` — AST-first forwarding/traversal helpers (SRP split)
 
 ## Completed
 
@@ -82,3 +83,4 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 - Updated dev plan to close requirements/implementation gaps.
 - Closed req/impl gap: truncation + forwarding traversal.
 - SOLID/DRY: split traversal modules; renamed tunnel helper; DRY tests.
+- Documentation pass: align docs with current behavior.- Expanded guide for core/cli integration.

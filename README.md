@@ -51,6 +51,21 @@ console.log(res.stats);
 // { modules, edges, dirty }
 ```
 
+## Options (high level)
+
+- `previousGraph`
+  - Pass the previously persisted graph to enable incremental analysis and edge reuse.
+- `nodeDescriptionLimit` (default: `160`)
+  - Produces `GraphNode.description` for TS/JS nodes based on module doc comments.
+  - When truncated, uses a strict prefix of exactly N characters and appends ASCII `...`.
+  - Set to `0` to omit descriptions.
+- `nodeDescriptionTags` (default: `['@module', '@packageDocumentation']`)
+  - Controls which TSDoc tags are considered for TS/JS descriptions.
+  - Tags must be `@`-prefixed and match `^@\\w+$`.
+- `maxErrors` (default: `50`)
+  - Caps returned `errors` entries (deterministic truncation).
+  - Set to `0` to omit errors.
+
 ## What the graph contains (high level)
 
 - Nodes are file-level (module-level) only.
@@ -69,6 +84,25 @@ console.log(res.stats);
 - `graph.nodes` keys are sorted for stable serialization.
 - `graph.edges` is a complete map: every node key exists (empty `[]` means “analyzed; no outgoing edges”).
 - Edge lists are de-duplicated and sorted deterministically.
+
+## ESLint plugin
+
+This package ships an optional ESLint plugin subpath export:
+
+```ts
+import stanContext from '@karmaniverous/stan-context/eslint';
+
+export default [
+  {
+    plugins: { 'stan-context': stanContext },
+    rules: {
+      ...stanContext.configs.recommended.rules,
+    },
+  },
+];
+```
+
+The default config enables `stan-context/require-module-description` at `warn`.
 
 ## License
 

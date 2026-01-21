@@ -12,12 +12,12 @@ stan-context scans a repository and produces a deterministic, serializable depen
 
 ## Architecture (core + providers)
 
-- Core (`src/core/`)
+- Core (`src/stan-context/core/`)
   - Defines the canonical graph schema and normalization rules.
   - Scans the Universe (repo file discovery and selection).
   - Computes hashes/sizes and performs incremental invalidation.
   - Delegates language analysis to providers and merges results.
-- Providers (`src/providers/`)
+- Providers (`src/stan-context/providers/`)
   - Implement language-specific analysis and tunneling.
   - Default provider: TypeScript/JavaScript provider using the TypeScript Compiler API.
   - Provider contract: accepts a list of source NodeIds to analyze and returns nodes/edges to merge.
@@ -235,14 +235,14 @@ Additional forwarding forms (must be supported)
   - `import { A as B } from './x'; export { B as C };`
   - `import Foo from './x'; export { Foo as Bar };` (forwarded `default`)
   - `import * as Ns from './x'; export { Ns as NamedNs };` (namespace forwarding)
+  - `export * as Ns from './x';` (namespace forwarding)
 
 Namespace forwarding semantics (important)
 
 - When the requested export name resolves to a namespace binding that was imported via `import * as Ns from '<m>'` and re-exported (with or without renaming):
   - The traversal MUST treat the target as the imported module `<m>` itself (module-level dependency), not as a symbol-level export name.
   - Tunneling MUST emit an implicit edge to the resolved module file for `<m>`.
-  - The provider MUST NOT attempt to expand namespace forwarding into declaration files via symbol lookup (there is no meaningful “exportName” to resolve on the target module for the namespace object).
-
+  - The provider MUST NOT attempt to expand namespace forwarding into declaration files via symbol lookup (there is no meaningful “exportName” to resolve on the target module for the namespace object).
 ### External dependencies (“Commander rule”)
 
 - Default external behavior is shallow:
