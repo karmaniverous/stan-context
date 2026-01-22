@@ -17,6 +17,7 @@
  */
 
 import type { Rule } from 'eslint';
+import picomatch from 'picomatch';
 
 import {
   getBestProseForTag,
@@ -25,6 +26,7 @@ import {
 
 type Options = Array<{
   tags?: string[];
+  ignorePatterns?: string[];
 }>;
 
 type SourceLocation = {
@@ -44,6 +46,35 @@ type SourceCodeLike = {
 
 const getSourceCode = (context: Rule.RuleContext): SourceCodeLike =>
   (context as unknown as { sourceCode: SourceCodeLike }).sourceCode;
+
+const getFilename = (context: Rule.RuleContext): string | undefined => {
+  const any = context as unknown as {
+    filename?: unknown;
+    getFilename?: unknown;
+  };
+  if (typeof any.getFilename === 'function') {
+    const f = (any.getFilename as () => unknown)();
+    return typeof f === 'string' ? f : undefined;
+  }
+  return typeof any.filename === 'string' ? any.filename : undefined;
+};
+
+const toPosixPath = (p: string): string => p.replace(/\\/g, '/');
+
+const isVirtualFilename = (f: string): boolean => {
+  // ESLint uses placeholders for text/STDIN or synthetic sources.
+  // In those cases, do not ignore by pattern because the user has no path.
+  const t = f.trim();
+  return t.startsWith('<') && t.endsWith('>');
+};
+
+const normalizeIgnorePatterns = (input: unknown): string[] => {
+  if (!Array.isArray(input)) return [];
+  return input
+    .filter((p): p is string => typeof p === 'string')
+    .map((p) => p.trim())
+    .filter(Boolean);
+};
 
 const formatTagList = (tags: string[]): string => {
   if (tags.length === 0) return '@module';
@@ -106,6 +137,11 @@ export const requireModuleDescriptionRule: Rule.RuleModule = {
             items: { type: 'string', pattern: '^@\\w+$' },
             minItems: 1,
           },
+          ignorePatterns: {
+            type: 'array',
+            items: { type: 'string' },
+            minItems: 1,
+          },
         },
         additionalProperties: false,
       },
@@ -118,8 +154,22 @@ export const requireModuleDescriptionRule: Rule.RuleModule = {
     const tags = normalizeDocTags(opt?.tags);
     const wanted = formatTagList(tags);
 
+    const ignorePatterns = normalizeIgnorePatterns(opt?.ignorePatterns);
+    const ignoreMatch =
+      ignorePatterns.length > 0
+        ? picomatch(ignorePatterns, { dot: true })
+        : null;
+
     return {
       Program(node) {
+        if (ignoreMatch) {
+          const filename = getFilename(context);
+          if (filename && !isVirtualFilename(filename)) {
+            const posix = toPosixPath(filename);
+            if (ignoreMatch(posix)) return;
+          }
+        }
+
         const sourceCode = getSourceCode(context);
         const sourceText = sourceCode.text;
 

@@ -3,6 +3,7 @@ import { requireModuleDescriptionRule } from './require-module-description';
 const run = (args: {
   sourceText: string;
   options?: Array<{ tags?: string[] }>;
+  filename?: string;
 }): string[] => {
   const messages: string[] = [];
 
@@ -20,6 +21,7 @@ const run = (args: {
 
   const ctx = {
     options: args.options ?? [],
+    getFilename: () => args.filename ?? '<text>',
     sourceCode,
     report: ({ message }: { node: unknown; message: string }) =>
       messages.push(message),
@@ -43,6 +45,15 @@ describe('eslint rule: require-module-description', () => {
     expect(msgs[0]).toContain('@packageDocumentation');
     expect(msgs[0]).toContain('either');
     expect(msgs[0]).not.toContain('Tag(s) missing');
+  });
+
+  test('ignores files matching ignorePatterns', () => {
+    const msgs = run({
+      filename: 'src/foo.test.ts',
+      sourceText: `export const x = 1;\n`,
+      options: [{ ignorePatterns: ['**/*.test.ts'] }],
+    } as unknown as Parameters<typeof run>[0]);
+    expect(msgs).toEqual([]);
   });
 
   test('warns when tag is present but prose is empty', () => {

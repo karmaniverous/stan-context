@@ -83,4 +83,6 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 - Updated dev plan to close requirements/implementation gaps.
 - Closed req/impl gap: truncation + forwarding traversal.
 - SOLID/DRY: split traversal modules; renamed tunnel helper; DRY tests.
-- Documentation pass: align docs with current behavior.- Expanded guide for core/cli integration.
+- Documentation pass: align docs with current behavior.
+- Expanded guide for core/cli integration.
+- ESLint: ignore test/spec files in recommended config.
