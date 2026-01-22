@@ -86,3 +86,4 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 - Documentation pass: align docs with current behavior.
 - Expanded guide for core/cli integration.
 - ESLint: ignore test/spec files in recommended config.
+- Docs: describe ESLint ignorePatterns and test defaults.

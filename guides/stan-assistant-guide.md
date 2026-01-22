@@ -308,6 +308,39 @@ export default [
 
 The rule shares the same “usable prose” semantics as `GraphNode.description`.
 
+### Test files are ignored by default (recommended config)
+
+`stanContext.configs.recommended` configures `stan-context/require-module-description`
+to ignore common test/test-like files by default (for example `*.test.*`,
+`*.spec.*`, and `test`/`tests`/`__tests__` directory patterns) across TS/JS-like
+extensions.
+
+This is intended to avoid noisy warnings in tests/fixtures where module-level
+documentation is not typically useful.
+
+### Rule option: `ignorePatterns`
+
+You can customize or extend the ignore set using `ignorePatterns` (glob patterns):
+
+```ts
+import stanContext from '@karmaniverous/stan-context/eslint';
+
+export default [
+  {
+    plugins: { 'stan-context': stanContext },
+    rules: {
+      ...stanContext.configs.recommended.rules,
+      'stan-context/require-module-description': [
+        'warn',
+        { ignorePatterns: ['**/*.test.ts', '**/*.spec.ts'] },
+      ],
+    },
+  },
+];
+```
+
+To enforce the rule in tests too, override with `ignorePatterns: []`.
+
 ## Common integration pitfalls
 
 - Always persist and pass `previousGraph` if you want incremental behavior.

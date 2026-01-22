@@ -102,7 +102,25 @@ export default [
 ];
 ```
 
-The default config enables `stan-context/require-module-description` at `warn`.
+The default config enables `stan-context/require-module-description` at `warn`,
+and ignores test/test-like files by default (common `*.test.*`, `*.spec.*`, and
+`test`/`tests`/`__tests__` directory patterns across TS/JS-like extensions).
+
+To enforce the rule everywhere (including tests), override it explicitly:
+
+```ts
+import stanContext from '@karmaniverous/stan-context/eslint';
+
+export default [
+  {
+    plugins: { 'stan-context': stanContext },
+    rules: {
+      ...stanContext.configs.recommended.rules,
+      'stan-context/require-module-description': ['warn', { ignorePatterns: [] }],
+    },
+  },
+];
+```
 
 ## License
 
