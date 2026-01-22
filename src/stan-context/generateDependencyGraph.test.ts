@@ -20,9 +20,8 @@ describe('generateDependencyGraph', () => {
       vi.doMock('./providers/ts/load', () => {
         return { tryLoadTypeScript: () => null };
       });
-      const { generateDependencyGraph } = await import(
-        './generateDependencyGraph'
-      );
+      const { generateDependencyGraph } =
+        await import('./generateDependencyGraph');
 
       const res = await generateDependencyGraph({ cwd });
 
