@@ -131,7 +131,7 @@ export const requireModuleDescriptionRule: Rule.RuleModule = {
           .map((r) => r.tag);
 
         const parts: string[] = [
-          `Missing usable module documentation: add a /** ... */ doc comment containing ${wanted} with prose.`,
+          `Missing usable module documentation: add a valid TSDoc comment containing ${wanted} with prose.`,
         ];
 
         for (const t of presentButEmpty) {

@@ -141,7 +141,7 @@
     "lint": "eslint .",
     "release:pre": "npm run release -- --no-git.requireBranch --github.prerelease --preRelease",
     "release": "dotenvx run -f .env.local -- release-it",
-    "test": "vitest --run --coverage --silent",
+    "test": "vitest --run --silent",
     "typecheck": "tsc"
   },
   "type": "module",
