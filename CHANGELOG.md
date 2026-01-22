@@ -2,7 +2,28 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [0.2.0](https://github.com/karmaniverous/stan-context/compare/0.1.0...0.2.0)
+
+- updated dependencies [`348fd02`](https://github.com/karmaniverous/stan-context/commit/348fd02749448c66400c94cb8ee22b3c225680b9)
+- feat: add node descriptions and maxErrors [`0951632`](https://github.com/karmaniverous/stan-context/commit/09516320241c503f0a27a48e6508de3240238ff9)
+- refactor: split traversal + rename tunnel helper [`55f78e2`](https://github.com/karmaniverous/stan-context/commit/55f78e2cd884e7dc639ac4071b3c3d7ffd34eb0f)
+- feat: strict truncation and forwarding traversal [`405f033`](https://github.com/karmaniverous/stan-context/commit/405f033fddbf37731c3b740de73000bb961c9fa7)
+- feat: export eslint rule for module doc prose [`a0e1e60`](https://github.com/karmaniverous/stan-context/commit/a0e1e6060fed71603df835095fab597c74b31cf8)
+- fix: stabilize eslint rule and SSR imports [`7754a83`](https://github.com/karmaniverous/stan-context/commit/7754a836c7fe818cf50f3973416ed24e0532be08)
+- refactor: make doc tag logic fully tag-agnostic [`42f241d`](https://github.com/karmaniverous/stan-context/commit/42f241d5032774f3ac609d9024747c221db3f8da)
+- fix: ignore docblocks inside strings/templates [`fd22776`](https://github.com/karmaniverous/stan-context/commit/fd227767ac52290465c70afb03eec8d8d95b2563)
+- docs: align requirements/guide/README with code [`44aef02`](https://github.com/karmaniverous/stan-context/commit/44aef02974b55a1ee27a5b4cc59efbbc4c0d2e69)
+- docs: clarify tunneling ergonomics and ESLint [`ace3489`](https://github.com/karmaniverous/stan-context/commit/ace3489d195ce500d4f694068cc29e0a8f1bbac2)
+- fix docblock scanning + SSR test stability [`a0f0d58`](https://github.com/karmaniverous/stan-context/commit/a0f0d585303e1fd22eb34370c8a5924d26f6ab12)
+- fix: resolve eslint rule typed-lint errors [`fbbe56e`](https://github.com/karmaniverous/stan-context/commit/fbbe56eaf3d007511f554516cbd9d28fdc11064d)
+- fix: stabilize node descriptions implementation [`37d63f7`](https://github.com/karmaniverous/stan-context/commit/37d63f757ea9cc9a6cefdfce05a3a7fd2268d45d)
+- fix reexportTraversal test import + lint [`d3ca264`](https://github.com/karmaniverous/stan-context/commit/d3ca264690367212c51fbd17ebecc2f384ad8040)
+- docs: update plan for req/impl alignment [`ed8095c`](https://github.com/karmaniverous/stan-context/commit/ed8095cd930ac85daddb217167bfef5699a0c33e)
+- docs: mark description/maxErrors work validated [`e123f76`](https://github.com/karmaniverous/stan-context/commit/e123f7602746dd840ae854a4dda6e41a8daf417f)
+
 #### 0.1.0
+
+> 19 January 2026
 
 - initial commit [`d57105a`](https://github.com/karmaniverous/stan-context/commit/d57105a54b608c11de3eb833a9d6957c3533f6cf)
 - updated docs [`de28d07`](https://github.com/karmaniverous/stan-context/commit/de28d07b8f8e66476c0f7daa214ba19a09449ae6)
@@ -12,6 +33,7 @@ All notable changes to this project will be documented in this file. Dates are d
 - fix: implement AST-first re-export tunneling [`8c36ea4`](https://github.com/karmaniverous/stan-context/commit/8c36ea4bee5039ad85afb4cea35a9956b2a1c342)
 - chore: remove stan-core template remnants [`c2d0fee`](https://github.com/karmaniverous/stan-context/commit/c2d0fee3359e722d38c52d6b1b4b08f1d4acfb3e)
 - docs: define stan-context graph requirements [`13f37d7`](https://github.com/karmaniverous/stan-context/commit/13f37d7f24710f4c6876859256c8c63d202e64af)
+- chore: release v0.1.0 [`e511448`](https://github.com/karmaniverous/stan-context/commit/e5114489b313931abb414c525c5ff2024eafd079)
 - test: add incremental dirty-set coverage [`d6d4811`](https://github.com/karmaniverous/stan-context/commit/d6d4811639f4426e2c7bfb13a69dc0278fb0941a)
 - fix: remove deprecated TS APIs; make tunneling work [`d32cb70`](https://github.com/karmaniverous/stan-context/commit/d32cb702ebd69b3cb430ffc99df8b9f78e22ce07)
 - docs: add stan-context assistant guide [`13c4218`](https://github.com/karmaniverous/stan-context/commit/13c421855fafd7776d55c6d6955621366bf711e9)
