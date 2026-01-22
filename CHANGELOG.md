@@ -2,7 +2,13 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [0.2.1](https://github.com/karmaniverous/stan-context/compare/0.2.0...0.2.1)
+
+- Improved lint rule warning [`99c78fc`](https://github.com/karmaniverous/stan-context/commit/99c78fcfa7736fbeb7da432efa9f8b76fbfc6379)
+
 #### [0.2.0](https://github.com/karmaniverous/stan-context/compare/0.1.0...0.2.0)
+
+> 22 January 2026
 
 - updated dependencies [`348fd02`](https://github.com/karmaniverous/stan-context/commit/348fd02749448c66400c94cb8ee22b3c225680b9)
 - feat: add node descriptions and maxErrors [`0951632`](https://github.com/karmaniverous/stan-context/commit/09516320241c503f0a27a48e6508de3240238ff9)
@@ -10,6 +16,7 @@ All notable changes to this project will be documented in this file. Dates are d
 - feat: strict truncation and forwarding traversal [`405f033`](https://github.com/karmaniverous/stan-context/commit/405f033fddbf37731c3b740de73000bb961c9fa7)
 - feat: export eslint rule for module doc prose [`a0e1e60`](https://github.com/karmaniverous/stan-context/commit/a0e1e6060fed71603df835095fab597c74b31cf8)
 - fix: stabilize eslint rule and SSR imports [`7754a83`](https://github.com/karmaniverous/stan-context/commit/7754a836c7fe818cf50f3973416ed24e0532be08)
+- chore: release v0.2.0 [`e77dd86`](https://github.com/karmaniverous/stan-context/commit/e77dd86058c472914160fa08830bf677f74967cc)
 - refactor: make doc tag logic fully tag-agnostic [`42f241d`](https://github.com/karmaniverous/stan-context/commit/42f241d5032774f3ac609d9024747c221db3f8da)
 - fix: ignore docblocks inside strings/templates [`fd22776`](https://github.com/karmaniverous/stan-context/commit/fd227767ac52290465c70afb03eec8d8d95b2563)
 - docs: align requirements/guide/README with code [`44aef02`](https://github.com/karmaniverous/stan-context/commit/44aef02974b55a1ee27a5b4cc59efbbc4c0d2e69)
