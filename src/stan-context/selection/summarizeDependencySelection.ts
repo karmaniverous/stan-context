@@ -228,13 +228,16 @@ export const summarizeDependencySelection = (args: {
   const dropNodeKinds = uniq(
     args.options?.dropNodeKinds ?? DEFAULT_DROP_NODE_KINDS,
   );
-  const maxTop = clampInt(args.options?.maxTop, 0) || DEFAULT_MAX_TOP;
+  const maxTop =
+    typeof args.options?.maxTop === 'number'
+      ? clampInt(args.options.maxTop, 0)
+      : DEFAULT_MAX_TOP;
   const hashSizeEnforcement =
     args.options?.hashSizeEnforcement ?? DEFAULT_HASH_SIZE_ENFORCEMENT;
 
   const includeSet = expandClosure({
     graph: args.graph,
-    entries: args.include ?? [],
+    entries: args.include,
     defaultEdgeKinds,
     warnings,
   });

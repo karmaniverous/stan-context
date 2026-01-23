@@ -1,6 +1,19 @@
 import { withTempDir, writeFile } from '../test/temp';
 import type { DependencyGraph } from './types';
 
+const findExternalNodeId = (graph: DependencyGraph): string => {
+  // Prefer a stable, intent-revealing external node for the tests below.
+  const explicitPkg = Object.keys(graph.nodes).find((id) =>
+    id.endsWith('node_modules/pkg/index.d.ts'),
+  );
+  if (explicitPkg) return explicitPkg;
+
+  const anyExternal = Object.entries(graph.nodes).find(
+    ([, n]) => n.kind === 'external',
+  )?.[0];
+  return anyExternal ?? '';
+};
+
 describe('generateDependencyGraph', () => {
   test('returns nodes-only graph when TypeScript is missing', async () => {
     await withTempDir(async (cwd) => {
@@ -47,6 +60,10 @@ describe('generateDependencyGraph', () => {
 
   test('hashSizeEnforcement=warn surfaces warning for carried nodes', async () => {
     await withTempDir(async (cwd) => {
+      // Ensure the TypeScript loader mock from the earlier test cannot leak.
+      vi.resetModules();
+      vi.unmock('./providers/ts/load');
+
       await writeFile(
         cwd,
         'tsconfig.json',
@@ -84,20 +101,22 @@ describe('generateDependencyGraph', () => {
         `import type { A } from 'pkg';\nexport const x: A = { a: 'x' };\n`,
       );
 
-      const first = await import('./generateDependencyGraph');
-      const built = await first.generateDependencyGraph({ cwd });
-      const extId = 'node_modules/pkg/index.d.ts';
+      const mod = await import('./generateDependencyGraph');
+      const built = await mod.generateDependencyGraph({ cwd });
+      const extId = findExternalNodeId(built.graph);
 
+      expect(extId).toBeTruthy();
       expect(built.graph.nodes[extId]).toBeTruthy();
       expect(typeof built.graph.nodes[extId].metadata?.hash).toBe('string');
       expect(typeof built.graph.nodes[extId].metadata?.size).toBe('number');
 
-      const mutated: DependencyGraph = JSON.parse(JSON.stringify(built.graph));
+      const mutated: DependencyGraph = structuredClone(built.graph);
       // Simulate an older/hand-constructed previousGraph where size is missing
       // but hash is present (carried nodes path).
-      delete mutated.nodes[extId].metadata?.size;
+      if (mutated.nodes[extId].metadata)
+        delete mutated.nodes[extId].metadata.size;
 
-      const res = await first.generateDependencyGraph({
+      const res = await mod.generateDependencyGraph({
         cwd,
         previousGraph: mutated,
         hashSizeEnforcement: 'warn',
@@ -113,6 +132,10 @@ describe('generateDependencyGraph', () => {
 
   test('hashSizeEnforcement=error throws on violation', async () => {
     await withTempDir(async (cwd) => {
+      // Ensure the TypeScript loader mock from the earlier test cannot leak.
+      vi.resetModules();
+      vi.unmock('./providers/ts/load');
+
       await writeFile(
         cwd,
         'node_modules/pkg/index.d.ts',
@@ -135,10 +158,11 @@ describe('generateDependencyGraph', () => {
 
       const mod = await import('./generateDependencyGraph');
       const built = await mod.generateDependencyGraph({ cwd });
-      const extId = 'node_modules/pkg/index.d.ts';
+      const extId = findExternalNodeId(built.graph);
 
-      const mutated: DependencyGraph = JSON.parse(JSON.stringify(built.graph));
-      delete mutated.nodes[extId].metadata?.size;
+      const mutated: DependencyGraph = structuredClone(built.graph);
+      if (mutated.nodes[extId].metadata)
+        delete mutated.nodes[extId].metadata.size;
 
       await expect(
         mod.generateDependencyGraph({
