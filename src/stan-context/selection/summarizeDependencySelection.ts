@@ -56,6 +56,11 @@ const DEFAULT_DROP_NODE_KINDS: Array<'builtin' | 'missing'> = [
 const DEFAULT_MAX_TOP = 10;
 const DEFAULT_HASH_SIZE_ENFORCEMENT: HashSizeEnforcement = 'warn';
 
+const hasOwn = (rec: object, key: string): boolean =>
+  Object.prototype.hasOwnProperty.call(rec, key);
+const getOwn = <T>(rec: Record<string, T>, key: string): T | undefined =>
+  hasOwn(rec, key) ? rec[key] : undefined;
+
 const uniq = <T>(items: T[]): T[] => Array.from(new Set(items));
 
 const clampInt = (n: unknown, min: number): number => {
@@ -188,7 +193,7 @@ const expandClosure = (args: {
     if (cur.remaining <= 0) continue;
     if (cur.edgeKinds.length === 0) continue;
 
-    const outs: GraphEdge[] = args.graph.edges[cur.id] ?? [];
+    const outs: GraphEdge[] = getOwn(args.graph.edges, cur.id) ?? [];
     for (const e of outs) {
       if (!cur.edgeKinds.includes(e.kind)) continue;
       selected.add(e.target);
@@ -255,7 +260,7 @@ export const summarizeDependencySelection = (args: {
   // Drop node kinds (default: builtin/missing) AFTER excludes subtraction.
   const dropped: Array<{ id: NodeId; kind: GraphNode['kind'] }> = [];
   for (const id of Array.from(includeSet)) {
-    const n = args.graph.nodes[id];
+    const n = getOwn(args.graph.nodes, id);
     if (!n) continue; // unknown node IDs are retained
     if (
       (n.kind === 'builtin' && dropNodeKinds.includes('builtin')) ||
@@ -277,7 +282,7 @@ export const summarizeDependencySelection = (args: {
 
   // Unknown node IDs: keep them but warn.
   for (const id of selectedNodeIds) {
-    if (!Object.prototype.hasOwnProperty.call(args.graph.nodes, id)) {
+    if (!hasOwn(args.graph.nodes, id)) {
       warnings.add(`Selected nodeId not present in graph.nodes: ${id}`);
     }
   }
@@ -289,7 +294,7 @@ export const summarizeDependencySelection = (args: {
   let totalBytes = 0;
   const sized: Array<{ nodeId: string; bytes: number }> = [];
   for (const id of selectedNodeIds) {
-    const n = args.graph.nodes[id];
+    const n = getOwn(args.graph.nodes, id);
     const bytes = getBytesForNode(n);
     totalBytes += bytes;
     sized.push({ nodeId: id, bytes });

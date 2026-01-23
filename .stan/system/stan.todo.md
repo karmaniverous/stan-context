@@ -90,4 +90,6 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 - Reviewed stan-core interop notes; updated reqs/plan.
 - Implemented summarizeDependencySelection helper (main export) + tests.
 - Added hashSizeEnforcement option (warn default) + tests.
-- Fixed lint/test regressions for interop helpers.- Stabilized hashSizeEnforcement tests and helper lint.
+- Fixed lint/test regressions for interop helpers.
+- Stabilized hashSizeEnforcement tests and helper lint.
+- Fix typed-lint false positives in selection helper.
