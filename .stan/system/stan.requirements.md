@@ -343,3 +343,61 @@ export function generateDependencyGraph(
 - `maxErrors` (default: 50)
   - Limits GraphResult.errors length; 0 disables errors output.
   - When truncation occurs, the last entry MUST be a deterministic sentinel.
+
+## Interop: selection closure + budgeting helpers (stan-core)
+
+stan-core/stan-cli implement context-mode budgeting and need deterministic summaries of dependency selection closure size without reading file bodies.
+
+### Helper: summarize dependency selection closure + bytes
+
+- The package MUST export a helper from the main entrypoint that computes selection closure membership and aggregate sizing from an in-memory `DependencyGraph` plus include/exclude state entries.
+- The helper MUST NOT change the graph schema and MUST NOT require reading file bodies.
+- Proposed contract (shape; naming may evolve but semantics must remain stable):
+  - `summarizeDependencySelection({ graph, include, exclude, options }) -> summary`
+  - Inputs:
+    - `graph`: `DependencyGraph` (as returned by `generateDependencyGraph`)
+    - `include` / `exclude`: entries in the STAN dependency-state tuple forms:
+      - `string | [nodeId, depth] | [nodeId, depth, edgeKinds[]]`
+    - `options`:
+      - `defaultEdgeKinds` (default: `['runtime','type','dynamic']`)
+      - `dropNodeKinds` (default: drop `builtin` and `missing` from the returned selection)
+      - `maxTop` (default small; deterministic)
+  - Output summary MUST include:
+    - `selectedNodeIds: string[]` (sorted deterministically)
+    - `selectedCount: number`
+    - `totalBytes: number` (sum of `metadata.size` where present; missing treated as `0` but warned)
+    - `largest: Array<{ nodeId: string; bytes: number }>` (top-N by bytes; deterministic tie-breaking)
+    - `warnings: string[]` (deterministic ordering)
+
+Selection semantics (must match dependency state closure rules):
+
+- Expansion MUST traverse outgoing edges only.
+- Expansion MUST be depth-limited, where:
+  - depth `0` includes only the seed node
+  - depth `N` includes nodes reachable within `N` outgoing-edge traversals, filtered by `edgeKinds`
+- `edgeKinds` filtering:
+  - When omitted in an entry, use `options.defaultEdgeKinds`.
+  - Only `runtime`, `type`, and `dynamic` are valid kinds; invalid kinds MUST be ignored and warned deterministically.
+- Excludes win:
+  - Expand `include` to a closure set `S`.
+  - Expand `exclude` to a closure set `X` using the same traversal semantics.
+  - Final selection is `S \ X`.
+
+Node handling:
+
+- Unknown node IDs (present in state, absent from `graph.nodes`) MUST be retained in `selectedNodeIds` with bytes `0` and MUST produce a warning (do not silently drop).
+- `builtin` and `missing` node kinds SHOULD be excluded from the final selection by default via `dropNodeKinds`, with deterministic warnings indicating what was dropped.
+
+### Budgeting semantics: `metadata.size` is bytes
+
+- `GraphNode.metadata.size` MUST represent the on-disk file size in bytes for real file nodes that are hashed (`source` and `external`).
+- Consumers MAY treat `bytes / 4` as an approximate token heuristic; tokenization is out of scope for stan-context.
+
+### Configurable enforcement: `metadata.hash` implies `metadata.size`
+
+- When analyzing or normalizing graphs, stan-context MUST treat the invariant “if `metadata.hash` is present for a file node, `metadata.size` should also be present” as a supported contract.
+- Because incremental inputs may include older or hand-constructed graphs, enforcement MUST be configurable:
+  - Default behavior: emit deterministic warnings (surface via `GraphResult.errors` and/or helper `warnings`).
+  - Strict behavior (opt-in): treat violations as errors (fail the operation deterministically).
+  - Ignore behavior (opt-in): do not warn or error on violations.
+- The specific option name is implementation-defined, but it MUST be a documented, stable runtime knob (defaulting to warnings).

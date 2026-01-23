@@ -4,6 +4,26 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 
 ## Next up
 
+- Interop (stan-core): selection summary helper
+  - Implement `summarizeDependencySelection` as a pure helper exported from the main entrypoint.
+  - Match dependency state closure semantics:
+    - outgoing edges only
+    - depth-limited expansion
+    - edgeKinds filtering
+    - excludes subtract after includes
+  - Defaults:
+    - keep unknown node IDs in `selectedNodeIds` with bytes `0` + warnings
+    - drop `builtin` and `missing` by default + warnings
+  - Add focused unit tests for:
+    - include/exclude subtraction
+    - depth behavior
+    - edgeKinds filtering
+    - deterministic ordering (selectedNodeIds + largest + warnings)
+
+- Interop (stan-core): configurable `hash => size` enforcement
+  - Add a stable option (default warn) controlling how to handle nodes that have `metadata.hash` but missing `metadata.size`.
+  - Wire the policy into graph generation and into the selection summary helper warnings.
+
 - Release readiness
   - Expect new ESLint warnings until TS/JS modules add usable prose for the chosen tags.
   - Re-run `npm run lint` and confirm no ESLint errors (warnings expected).
@@ -86,4 +106,4 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 - Documentation pass: align docs with current behavior.
 - Expanded guide for core/cli integration.
 - ESLint: ignore test/spec files in recommended config.
-- Docs: describe ESLint ignorePatterns and test defaults.
+- Docs: describe ESLint ignorePatterns and test defaults.- Reviewed stan-core interop notes; updated reqs/plan.
