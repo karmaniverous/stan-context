@@ -2,8 +2,16 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [0.2.2](https://github.com/karmaniverous/stan-context/compare/0.2.1...0.2.2)
+
+- eslint: ignore tests in recommended config [`bb8ec39`](https://github.com/karmaniverous/stan-context/commit/bb8ec3960f28e7381bd68c69f304251b469e71f7)
+- docs: note ESLint test ignore defaults [`e081c3e`](https://github.com/karmaniverous/stan-context/commit/e081c3ef6427905a5c11296b6562caae1f6ef94f)
+
 #### [0.2.1](https://github.com/karmaniverous/stan-context/compare/0.2.0...0.2.1)
 
+> 22 January 2026
+
+- chore: release v0.2.1 [`123466c`](https://github.com/karmaniverous/stan-context/commit/123466ce3657f7edc6dde338b0981c331b0cf5a1)
 - Improved lint rule warning [`99c78fc`](https://github.com/karmaniverous/stan-context/commit/99c78fcfa7736fbeb7da432efa9f8b76fbfc6379)
 
 #### [0.2.0](https://github.com/karmaniverous/stan-context/compare/0.1.0...0.2.0)
