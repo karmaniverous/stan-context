@@ -8,6 +8,8 @@
 
 export type NodeId = string;
 
+export type HashSizeEnforcement = 'warn' | 'error' | 'ignore';
+
 export type GraphNodeKind = 'source' | 'external' | 'builtin' | 'missing';
 export type GraphLanguage = 'ts' | 'js' | 'json' | 'md' | 'other';
 
@@ -47,6 +49,13 @@ export type GraphOptions = {
     anchors?: string[];
   };
   previousGraph?: DependencyGraph;
+  /**
+   * Policy for enforcing the invariant:
+   * if `metadata.hash` is present for a file node, `metadata.size` should also be present.
+   *
+   * Default: `'warn'`.
+   */
+  hashSizeEnforcement?: HashSizeEnforcement;
   /**
    * Maximum prefix length of GraphNode.description (TS/JS only).
    *

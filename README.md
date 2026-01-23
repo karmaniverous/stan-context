@@ -62,11 +62,13 @@ console.log(res.stats);
 - `nodeDescriptionTags` (default: `['@module', '@packageDocumentation']`)
   - Controls which TSDoc tags are considered for TS/JS descriptions.
   - Tags must be `@`-prefixed and match `^@\\w+$`.
+- `hashSizeEnforcement` (default: `'warn'`)
+  - Controls how to handle the invariant “if `metadata.hash` is present for a file node, `metadata.size` should also be present”.
+  - Values: `'warn' | 'error' | 'ignore'`.
 - `maxErrors` (default: `50`)
   - Caps returned `errors` entries (deterministic truncation).
   - Set to `0` to omit errors.
-
-## What the graph contains (high level)
+## What the graph contains (high level)
 
 - Nodes are file-level (module-level) only.
 - Node IDs are stable strings:
@@ -85,10 +87,26 @@ console.log(res.stats);
 - `graph.edges` is a complete map: every node key exists (empty `[]` means “analyzed; no outgoing edges”).
 - Edge lists are de-duplicated and sorted deterministically.
 
+## Selection summary helper (context-mode budgeting)
+
+This package also exports a helper for computing dependency selection closure
+membership and aggregate sizing from a graph plus dependency-state entries:
+
+```ts
+import {
+  summarizeDependencySelection,
+  type DependencyStateEntry,
+} from '@karmaniverous/stan-context';
+
+const include: DependencyStateEntry[] = [['src/index.ts', 2, ['runtime']]];
+const summary = summarizeDependencySelection({ graph: res.graph, include });
+
+console.log(summary.totalBytes, summary.largest, summary.warnings);
+```
+
 ## ESLint plugin
 
-This package ships an optional ESLint plugin subpath export:
-
+This package ships an optional ESLint plugin subpath export:
 ```ts
 import stanContext from '@karmaniverous/stan-context/eslint';
 

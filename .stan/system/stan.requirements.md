@@ -281,6 +281,7 @@ export type GraphOptions = {
     anchors?: string[];
   };
   previousGraph?: DependencyGraph;
+  hashSizeEnforcement?: 'warn' | 'error' | 'ignore';
   nodeDescriptionLimit?: number;
   /**
    * TSDoc tags to consider for TS/JS module descriptions (strict `@` prefix).
@@ -400,4 +401,5 @@ Node handling:
   - Default behavior: emit deterministic warnings (surface via `GraphResult.errors` and/or helper `warnings`).
   - Strict behavior (opt-in): treat violations as errors (fail the operation deterministically).
   - Ignore behavior (opt-in): do not warn or error on violations.
-- The specific option name is implementation-defined, but it MUST be a documented, stable runtime knob (defaulting to warnings).
+- The stable runtime knob is `hashSizeEnforcement` with values:
+  - `'warn'` (default), `'error'`, `'ignore'`.

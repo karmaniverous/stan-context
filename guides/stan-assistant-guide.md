@@ -44,6 +44,7 @@ type GraphOptions = {
     anchors?: string[];
   };
   previousGraph?: DependencyGraph;
+  hashSizeEnforcement?: 'warn' | 'error' | 'ignore';
   nodeDescriptionLimit?: number;
   nodeDescriptionTags?: string[];
   maxErrors?: number;
@@ -87,6 +88,11 @@ Runtime options:
   - Caps the number of returned `errors` entries to avoid runaway output.
   - When truncation occurs, the final entry is a deterministic sentinel string.
   - Set to `0` to omit errors entirely.
+- `hashSizeEnforcement` (default: `'warn'`)
+  - Controls enforcement of the invariant:
+    - if `metadata.hash` is present for a file node, `metadata.size` should also be present.
+  - Default behavior is to emit deterministic warnings (via `GraphResult.errors`).
+  - `'error'` throws (strict); `'ignore'` is silent.
 
 ## Graph schema (practical contract)
 
@@ -137,6 +143,47 @@ For accurate prompt budgeting:
 
 - Compute token counts in the consumer (stan-core selection layer) using the tokenizer/model you will call.
 - Cache computed token counts keyed by `metadata.hash` (sha256) so you only re-tokenize when file content changes.
+
+## Selection summary helper (budgeting support)
+
+stan-context exports a pure helper to compute dependency selection closure
+membership and aggregate sizing (bytes) from an in-memory `DependencyGraph` plus
+dependency-state entries.
+
+This is intended to help consumers (e.g., stan-core/stan-cli context mode)
+produce deterministic “selection reports” without reimplementing closure logic
+and without reading file bodies.
+
+Import:
+
+```ts
+import {
+  summarizeDependencySelection,
+  type DependencyStateEntry,
+} from '@karmaniverous/stan-context';
+```
+
+Usage:
+
+```ts
+const include: DependencyStateEntry[] = [['src/index.ts', 2, ['runtime']]];
+const exclude: DependencyStateEntry[] = [];
+
+const summary = summarizeDependencySelection({
+  graph,
+  include,
+  exclude,
+  options: {
+    // defaults: ['runtime','type','dynamic']
+    defaultEdgeKinds: ['runtime', 'type', 'dynamic'],
+    // defaults: drop builtin/missing
+    dropNodeKinds: ['builtin', 'missing'],
+    maxTop: 10,
+    // default: 'warn'
+    hashSizeEnforcement: 'warn',
+  },
+});
+```
 
 ## Authoring practices for STAN-enabled repos (recommended)
 

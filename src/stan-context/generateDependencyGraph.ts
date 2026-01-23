@@ -6,6 +6,8 @@
  *   return a nodes-only graph with complete empty edges map.
  * - Optional node descriptions for TS/JS nodes are derived from doc comments.
  * - Runtime option maxErrors caps output error volume deterministically.
+ * - Configurable hash/size invariant enforcement:
+ *   warn (default), error (throw), ignore.
  */
 
 import path from 'node:path';
@@ -26,6 +28,7 @@ import type {
   GraphNode,
   GraphOptions,
   GraphResult,
+  HashSizeEnforcement,
   NodeId,
 } from './types';
 
@@ -35,6 +38,7 @@ const DEFAULT_NODE_DESCRIPTION_TAGS = [
   '@module',
   '@packageDocumentation',
 ] as const;
+const DEFAULT_HASH_SIZE_ENFORCEMENT: HashSizeEnforcement = 'warn';
 
 const isAnalyzableSource = (id: string): boolean => {
   const lower = id.toLowerCase();
@@ -44,6 +48,38 @@ const isAnalyzableSource = (id: string): boolean => {
     lower.endsWith('.tsx') ||
     lower.endsWith('.js') ||
     lower.endsWith('.jsx')
+  );
+};
+
+const validateHashSizeInvariant = (args: {
+  graph: DependencyGraph;
+  mode: HashSizeEnforcement;
+}): string[] => {
+  if (args.mode === 'ignore') return [];
+
+  const offenders: string[] = [];
+  for (const n of Object.values(args.graph.nodes)) {
+    const hashedFileNode =
+      (n.kind === 'source' || n.kind === 'external') &&
+      typeof n.metadata?.hash === 'string';
+    if (!hashedFileNode) continue;
+    if (typeof n.metadata?.size !== 'number') offenders.push(n.id);
+  }
+
+  const ids = offenders.sort((a, b) => a.localeCompare(b));
+  if (!ids.length) return [];
+
+  if (args.mode === 'error') {
+    const preview = ids.slice(0, 10).join(', ');
+    throw new Error(
+      `metadata.size missing for hashed nodes (${String(ids.length)}): ${preview}${
+        ids.length > 10 ? ' ...' : ''
+      }`,
+    );
+  }
+
+  return ids.map(
+    (id) => `warning: metadata.size missing for hashed node ${id}`,
   );
 };
 
@@ -65,6 +101,9 @@ export const generateDependencyGraph = async (
 
   const maxErrors =
     typeof opts.maxErrors === 'number' ? opts.maxErrors : DEFAULT_MAX_ERRORS;
+
+  const hashSizeEnforcement: HashSizeEnforcement =
+    opts.hashSizeEnforcement ?? DEFAULT_HASH_SIZE_ENFORCEMENT;
 
   const universeIds = await scanUniverseFiles({ cwd, config: opts.config });
   const analyzableSourceIds = universeIds.filter(isAnalyzableSource);
@@ -117,6 +156,10 @@ export const generateDependencyGraph = async (
       edges: edgesBase,
     });
 
+    errors.push(
+      ...validateHashSizeInvariant({ graph, mode: hashSizeEnforcement }),
+    );
+
     return {
       graph,
       stats: {
@@ -159,6 +202,10 @@ export const generateDependencyGraph = async (
     nodes: describedNodes,
     edges: mergedEdges,
   });
+
+  errors.push(
+    ...validateHashSizeInvariant({ graph, mode: hashSizeEnforcement }),
+  );
 
   return {
     graph,
