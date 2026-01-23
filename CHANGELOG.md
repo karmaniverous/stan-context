@@ -2,8 +2,20 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [0.3.0](https://github.com/karmaniverous/stan-context/compare/0.2.2...0.3.0)
+
+- feat: add selection summary helper [`2f199c5`](https://github.com/karmaniverous/stan-context/commit/2f199c5fd197b0ac1d2f0b233081d0540d28f738)
+- docs: complete selection helper contract [`8bbfe9f`](https://github.com/karmaniverous/stan-context/commit/8bbfe9f1a58438031fc9cccf3b54beb6544e9ed4)
+- fix: stabilize hashSizeEnforcement checks [`40d425b`](https://github.com/karmaniverous/stan-context/commit/40d425bc0ec3d91729c9fab8d8416472e7bc6685)
+- docs: record interop helper + size policy plan [`d5fab60`](https://github.com/karmaniverous/stan-context/commit/d5fab60a8ebfc1f44f6abb768780b4de6e8b742c)
+- fix: stabilize interop helper lint/tests [`11702c3`](https://github.com/karmaniverous/stan-context/commit/11702c34f143f066a38ccb723a9a778904a775c9)
+- fix: typed-lint clean selection helper [`8382b5c`](https://github.com/karmaniverous/stan-context/commit/8382b5cfa4080bb4c6a74b845520790d16bfa710)
+
 #### [0.2.2](https://github.com/karmaniverous/stan-context/compare/0.2.1...0.2.2)
 
+> 23 January 2026
+
+- chore: release v0.2.2 [`0007956`](https://github.com/karmaniverous/stan-context/commit/0007956b24cc9e5e0a6fd066f0330a9a03d7ad3d)
 - eslint: ignore tests in recommended config [`bb8ec39`](https://github.com/karmaniverous/stan-context/commit/bb8ec3960f28e7381bd68c69f304251b469e71f7)
 - docs: note ESLint test ignore defaults [`e081c3e`](https://github.com/karmaniverous/stan-context/commit/e081c3ef6427905a5c11296b6562caae1f6ef94f)
 
