@@ -306,27 +306,46 @@ export const summarizeDependencySelection = (args: {
     }
   }
 
-  if (hashSizeEnforcement === 'error' && missingSizeHashed.length) {
-    const list = missingSizeHashed.sort((a, b) => a.localeCompare(b));
-    const preview = list.slice(0, 10).join(', ');
-    throw new Error(
-      `metadata.size missing for hashed nodes (${String(list.length)}): ${preview}${
-        list.length > 10 ? ' ...' : ''
-      }`,
-    );
-  }
+  const hashedMissing = uniq(missingSizeHashed).sort((a, b) =>
+    a.localeCompare(b),
+  );
+  const hashedMissingSet = new Set<string>(hashedMissing);
 
-  if (hashSizeEnforcement === 'warn') {
-    for (const id of uniq(missingSizeHashed).sort((a, b) =>
-      a.localeCompare(b),
-    )) {
-      warnings.add(`metadata.size missing for hashed node: ${id}`);
+  // File nodes missing size but NOT part of the hash=>size invariant surface.
+  // (In ignore mode, we suppress warnings for hashed-node violations.)
+  const fileMissingNonHashed = uniq(missingSizeFileNode)
+    .filter((id) => !hashedMissingSet.has(id))
+    .sort((a, b) => a.localeCompare(b));
+
+  switch (hashSizeEnforcement) {
+    case 'error': {
+      if (hashedMissing.length > 0) {
+        const preview = hashedMissing.slice(0, 10).join(', ');
+        const suffix = hashedMissing.length > 10 ? ' ...' : '';
+        throw new Error(
+          `metadata.size missing for hashed nodes (${String(
+            hashedMissing.length,
+          )}): ${preview}${suffix}`,
+        );
+      }
+      break;
+    }
+    case 'warn': {
+      for (const id of hashedMissing) {
+        warnings.add(`metadata.size missing for hashed node: ${id}`);
+      }
+      break;
+    }
+    case 'ignore': {
+      break;
+    }
+    default: {
+      const _exhaustive: never = hashSizeEnforcement;
+      void _exhaustive;
     }
   }
 
-  for (const id of uniq(missingSizeFileNode).sort((a, b) =>
-    a.localeCompare(b),
-  )) {
+  for (const id of fileMissingNonHashed) {
     warnings.add(`metadata.size missing for file node: ${id}`);
   }
 
