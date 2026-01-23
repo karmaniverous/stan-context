@@ -185,6 +185,41 @@ const summary = summarizeDependencySelection({
 });
 ```
 
+Contract (v1):
+
+- Entry forms (`DependencyStateEntry`):
+  - `nodeId`
+  - `[nodeId, depth]`
+  - `[nodeId, depth, edgeKinds]`
+- Traversal semantics:
+  - outgoing edges only
+  - depth-limited expansion:
+    - depth `0`: seed only
+    - depth `N`: include targets reachable within `N` outgoing-edge traversals
+  - `edgeKinds` filtering:
+    - valid kinds: `runtime` | `type` | `dynamic`
+    - when omitted, `defaultEdgeKinds` is used
+    - invalid kinds are ignored and produce deterministic warnings
+- Excludes win:
+  - expand include closure `S`
+  - expand exclude closure `X` using the same traversal semantics
+  - final selection is `S \ X`
+- Node handling:
+  - unknown node IDs (present in state, absent from `graph.nodes`) are retained with bytes `0` and produce warnings
+  - builtin/missing nodes are dropped by default (configurable) and produce warnings indicating what was dropped
+- Size semantics:
+  - `totalBytes` is the sum of `metadata.size` (bytes) for selected nodes where present
+  - missing sizes are treated as `0` and produce warnings
+  - consumers may use a deterministic heuristic `estimatedTokens ≈ totalBytes / 4`
+- Determinism guarantees:
+  - `selectedNodeIds` is sorted lexicographically
+  - `largest` is sorted by bytes descending, tie-break by nodeId ascending
+  - `warnings` is sorted lexicographically
+- Hash/size invariant enforcement (`hashSizeEnforcement`):
+  - `'warn'` (default): add warnings when a hashed file node is missing `metadata.size`
+  - `'error'`: throw when a hashed file node is missing `metadata.size`
+  - `'ignore'`: suppress hashed-node warnings/errors
+
 ## Authoring practices for STAN-enabled repos (recommended)
 
 These conventions are not required for correctness, but they materially improve the quality and precision of the dependency graph (and therefore improve STAN’s context selection).

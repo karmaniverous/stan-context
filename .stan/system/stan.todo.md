@@ -93,3 +93,4 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 - Fixed lint/test regressions for interop helpers.
 - Stabilized hashSizeEnforcement tests and helper lint.
 - Fix typed-lint false positives in selection helper.
+- Docs: fully specify selection helper contract.

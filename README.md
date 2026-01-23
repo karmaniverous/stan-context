@@ -68,7 +68,8 @@ console.log(res.stats);
 - `maxErrors` (default: `50`)
   - Caps returned `errors` entries (deterministic truncation).
   - Set to `0` to omit errors.
-## What the graph contains (high level)
+
+## What the graph contains (high level)
 
 - Nodes are file-level (module-level) only.
 - Node IDs are stable strings:
@@ -89,8 +90,7 @@ console.log(res.stats);
 
 ## Selection summary helper (context-mode budgeting)
 
-This package also exports a helper for computing dependency selection closure
-membership and aggregate sizing from a graph plus dependency-state entries:
+This package also exports a helper for computing dependency selection closure membership and aggregate sizing from a graph plus dependency-state entries:
 
 ```ts
 import {
@@ -104,9 +104,39 @@ const summary = summarizeDependencySelection({ graph: res.graph, include });
 console.log(summary.totalBytes, summary.largest, summary.warnings);
 ```
 
+Contract (summary):
+
+- Entry forms:
+  - `nodeId`
+  - `[nodeId, depth]`
+  - `[nodeId, depth, edgeKinds]`
+- Traversal:
+  - outgoing edges only
+  - depth-limited expansion:
+    - depth `0` includes only the seed node
+    - depth `N` includes nodes reachable within `N` outgoing-edge traversals
+  - `edgeKinds` filters which edges are followed (`runtime` | `type` | `dynamic`)
+- Excludes win:
+  - expands include closure `S`
+  - expands exclude closure `X` using the same semantics
+  - final selection is `S \ X`
+- Defaults:
+  - `defaultEdgeKinds`: `['runtime', 'type', 'dynamic']`
+  - `dropNodeKinds`: drops `builtin` and `missing` nodes by default (with warnings)
+  - unknown node IDs in state are retained with bytes `0` (with warnings)
+- Sizing:
+  - `totalBytes` is the sum of `metadata.size` (bytes) for selected nodes where present
+  - missing sizes are treated as `0` (with warnings)
+  - a common deterministic budgeting heuristic is `estimatedTokens ≈ totalBytes / 4`
+- Determinism:
+  - `selectedNodeIds` is sorted lexicographically
+  - `largest` is sorted by bytes descending, tie-break by nodeId ascending
+  - `warnings` is sorted lexicographically
+
 ## ESLint plugin
 
-This package ships an optional ESLint plugin subpath export:
+This package ships an optional ESLint plugin subpath export:
+
 ```ts
 import stanContext from '@karmaniverous/stan-context/eslint';
 
@@ -120,9 +150,7 @@ export default [
 ];
 ```
 
-The default config enables `stan-context/require-module-description` at `warn`,
-and ignores test/test-like files by default (common `*.test.*`, `*.spec.*`, and
-`test`/`tests`/`__tests__` directory patterns across TS/JS-like extensions).
+The default config enables `stan-context/require-module-description` at `warn`, and ignores test/test-like files by default (common `*.test.*`, `*.spec.*`, and `test`/`tests`/`__tests__` directory patterns across TS/JS-like extensions).
 
 To enforce the rule everywhere (including tests), override it explicitly:
 
@@ -134,7 +162,10 @@ export default [
     plugins: { 'stan-context': stanContext },
     rules: {
       ...stanContext.configs.recommended.rules,
-      'stan-context/require-module-description': ['warn', { ignorePatterns: [] }],
+      'stan-context/require-module-description': [
+        'warn',
+        { ignorePatterns: [] },
+      ],
     },
   },
 ];
@@ -142,4 +173,8 @@ export default [
 
 ## License
 
-BSD-3-Clause
+BSD-3-Clause
+
+---
+
+Built for you with ❤️ on Bali! Find more great tools & templates on [my GitHub Profile](https://github.com/karmaniverous).
