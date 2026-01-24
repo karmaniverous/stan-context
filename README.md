@@ -69,6 +69,11 @@ console.log(res.stats);
   - If both are provided, `typescript` takes precedence.
   - `typescriptPath` must be an absolute filesystem path (ESM host example: `createRequire(import.meta.url).resolve('typescript')`).
   - If loading from `typescriptPath` fails, the thrown error preserves the original loader error as `error.cause` (Node >= 20).
+  - `typescriptPath` semantics (important for hosts):
+    - `typescriptPath` is treated as an **entry module file path** that exports the TypeScript compiler API (it is not treated as a package root).
+    - A good default is `require.resolve('typescript')`, which typically resolves to a CommonJS file like `.../typescript/lib/typescript.js`.
+    - VS Code’s TypeScript SDK entry (often `.../tsserverlibrary.js`) is also suitable as long as it exports the same TypeScript API surface.
+    - Interop: for module injection, stan-context normalizes `mod.default ?? mod` when validating the injected TypeScript module; for `typescriptPath`, the file is loaded via `require()`, so the path should point to a CommonJS entry module.
 - `previousGraph`
   - Pass the previously persisted graph to enable incremental analysis and edge reuse.
 - `nodeDescriptionLimit` (default: `160`)
