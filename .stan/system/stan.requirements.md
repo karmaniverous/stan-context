@@ -1,7 +1,3 @@
-# .stan/system/stan.requirements.md
-
-# Post-patch full listing (anchors removed; includes/excludes only)
-
 # STAN — Requirements (stan-context)
 
 This document defines the durable requirements for `@karmaniverous/stan-context` (“stan-context”), the “Context Compiler” package.

@@ -101,4 +101,5 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 - Docs: align integration guidance with TS injection.
 - Docs: clarify TS injection precedence and throw semantics.
 - Docs: mirror TS injection contract in README.
-- Breaking: remove anchors from selection config (includes/excludes only).
+- Breaking: remove anchors from selection config (includes/excludes only).
+- Cleanup: remove patch-failure listing headers from docs.

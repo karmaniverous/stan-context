@@ -34,7 +34,7 @@ describe('scanUniverseFiles', () => {
       expect(files).not.toContain('drop.txt');
       expect(files).not.toContain('excluded.txt');
 
-      // node_modules is implicitly excluded unless explicitly included/anchored
+      // node_modules is implicitly excluded unless explicitly included
       expect(files).toContain('node_modules/pkg/index.d.ts');
 
       // .git is hard excluded even if present on disk

@@ -1,9 +1,3 @@
-# guides/stan-assistant-guide.md
-
-# Post-patch full listing (anchors removed; includes/excludes only)
-
-# guides/stan-assistant-guide.md
-
 # STAN assistant guide — stan-context
 
 This guide is a compact, self-contained usage contract for `@karmaniverous/stan-context` (“stan-context”). It is written so a STAN assistant (or human) can integrate the package correctly without consulting `.d.ts` files or other docs.

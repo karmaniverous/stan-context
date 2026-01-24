@@ -12,7 +12,7 @@ import { toPosixPath } from './paths';
  * - Universe scan defines source nodes.
  * - Respect root .gitignore (unless re-included via includes).
  * - Implicit exclusions: .git/** always; node_modules/** unless explicitly allowed.
- * - Precedence: includes => excludes.
+ * - Precedence: includes =\> excludes.
  */
 export type UniverseConfig = {
   includes?: string[];
