@@ -23,13 +23,27 @@
 </code><button type="button">Copy</button></pre>
 
 <p>Node: <code>&gt;= 20</code></p>
-<p>TypeScript: provided as a <strong>peer dependency</strong> for the TS/JS provider.</p>
+<p>TypeScript: <strong>required</strong> for TS/JS analysis and must be provided explicitly by the host (see example below).</p>
+<p>If TypeScript is missing or cannot be loaded from the injected inputs, <code>generateDependencyGraph</code> throws (this is not surfaced via <code>errors</code>).</p>
 <h2 id="quick-example" class="tsd-anchor-link">Quick example<a href="#quick-example" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
-<pre><code class="ts"><span class="hl-4">import</span><span class="hl-1"> { </span><span class="hl-5">generateDependencyGraph</span><span class="hl-1"> } </span><span class="hl-4">from</span><span class="hl-1"> </span><span class="hl-2">&#39;@karmaniverous/stan-context&#39;</span><span class="hl-1">;</span><br/><br/><span class="hl-6">const</span><span class="hl-1"> </span><span class="hl-7">res</span><span class="hl-1"> = </span><span class="hl-4">await</span><span class="hl-1"> </span><span class="hl-0">generateDependencyGraph</span><span class="hl-1">({</span><br/><span class="hl-1">  </span><span class="hl-5">cwd:</span><span class="hl-1"> </span><span class="hl-5">process</span><span class="hl-1">.</span><span class="hl-0">cwd</span><span class="hl-1">(),</span><br/><span class="hl-1">  </span><span class="hl-5">config:</span><span class="hl-1"> {</span><br/><span class="hl-1">    </span><span class="hl-5">includes:</span><span class="hl-1"> [],</span><br/><span class="hl-1">    </span><span class="hl-5">excludes:</span><span class="hl-1"> [</span><span class="hl-2">&#39;dist/**&#39;</span><span class="hl-1">],</span><br/><span class="hl-1">    </span><span class="hl-5">anchors:</span><span class="hl-1"> [</span><span class="hl-2">&#39;README.md&#39;</span><span class="hl-1">],</span><br/><span class="hl-1">  },</span><br/><span class="hl-1">  </span><span class="hl-5">previousGraph:</span><span class="hl-1"> </span><span class="hl-6">undefined</span><span class="hl-1">,</span><br/><span class="hl-1">});</span><br/><br/><span class="hl-5">console</span><span class="hl-1">.</span><span class="hl-0">log</span><span class="hl-1">(</span><span class="hl-5">res</span><span class="hl-1">.</span><span class="hl-5">stats</span><span class="hl-1">);</span><br/><span class="hl-3">// { modules, edges, dirty }</span>
+<pre><code class="ts"><span class="hl-4">import</span><span class="hl-1"> </span><span class="hl-5">ts</span><span class="hl-1"> </span><span class="hl-4">from</span><span class="hl-1"> </span><span class="hl-2">&#39;typescript&#39;</span><span class="hl-1">;</span><br/><span class="hl-4">import</span><span class="hl-1"> { </span><span class="hl-5">generateDependencyGraph</span><span class="hl-1"> } </span><span class="hl-4">from</span><span class="hl-1"> </span><span class="hl-2">&#39;@karmaniverous/stan-context&#39;</span><span class="hl-1">;</span><br/><br/><span class="hl-6">const</span><span class="hl-1"> </span><span class="hl-7">res</span><span class="hl-1"> = </span><span class="hl-4">await</span><span class="hl-1"> </span><span class="hl-0">generateDependencyGraph</span><span class="hl-1">({</span><br/><span class="hl-1">  </span><span class="hl-5">cwd:</span><span class="hl-1"> </span><span class="hl-5">process</span><span class="hl-1">.</span><span class="hl-0">cwd</span><span class="hl-1">(),</span><br/><span class="hl-1">  </span><span class="hl-5">typescript:</span><span class="hl-1"> </span><span class="hl-5">ts</span><span class="hl-1">,</span><br/><span class="hl-1">  </span><span class="hl-5">config:</span><span class="hl-1"> {</span><br/><span class="hl-1">    </span><span class="hl-5">includes:</span><span class="hl-1"> [],</span><br/><span class="hl-1">    </span><span class="hl-5">excludes:</span><span class="hl-1"> [</span><span class="hl-2">&#39;dist/**&#39;</span><span class="hl-1">],</span><br/><span class="hl-1">    </span><span class="hl-5">anchors:</span><span class="hl-1"> [</span><span class="hl-2">&#39;README.md&#39;</span><span class="hl-1">],</span><br/><span class="hl-1">  },</span><br/><span class="hl-1">  </span><span class="hl-5">previousGraph:</span><span class="hl-1"> </span><span class="hl-6">undefined</span><span class="hl-1">,</span><br/><span class="hl-1">});</span><br/><br/><span class="hl-5">console</span><span class="hl-1">.</span><span class="hl-0">log</span><span class="hl-1">(</span><span class="hl-5">res</span><span class="hl-1">.</span><span class="hl-5">stats</span><span class="hl-1">);</span><br/><span class="hl-3">// { modules, edges, dirty }</span>
 </code><button type="button">Copy</button></pre>
 
 <h2 id="options-high-level" class="tsd-anchor-link">Options (high level)<a href="#options-high-level" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="assets/icons.svg#icon-anchor"></use></svg></a></h2>
 <ul>
+<li><code>typescript</code> / <code>typescriptPath</code> (required; host-provided)
+<ul>
+<li>This package does not attempt to resolve TypeScript implicitly.</li>
+<li>Provide either:
+<ul>
+<li><code>typescript</code>: an already-loaded TypeScript module instance, or</li>
+<li><code>typescriptPath</code>: an absolute path to a TypeScript entry module (for example <code>require.resolve('typescript')</code> from the host environment).</li>
+</ul>
+</li>
+<li>If both are provided, <code>typescript</code> takes precedence.</li>
+<li><code>typescriptPath</code> must be an absolute filesystem path (ESM host example: <code>createRequire(import.meta.url).resolve('typescript')</code>).</li>
+</ul>
+</li>
 <li><code>previousGraph</code>
 <ul>
 <li>Pass the previously persisted graph to enable incremental analysis and edge reuse.</li>

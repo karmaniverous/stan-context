@@ -2,10 +2,19 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [0.4.0](https://github.com/karmaniverous/stan-context/compare/0.3.0...0.4.0)
+
+- docs: clarify TS injection contract [`55d2d33`](https://github.com/karmaniverous/stan-context/commit/55d2d331be0b175e4fcb47f8964b5691a52a0b04)
+- feat: require injected TypeScript [`4dbc9ce`](https://github.com/karmaniverous/stan-context/commit/4dbc9ce94447a2b657a5f217e7388149499cecda)
+- docs: align TS injection guidance [`cf4a4dc`](https://github.com/karmaniverous/stan-context/commit/cf4a4dc40b86c9e90666756e23c58120db707944)
+
 #### [0.3.0](https://github.com/karmaniverous/stan-context/compare/0.2.2...0.3.0)
+
+> 23 January 2026
 
 - feat: add selection summary helper [`2f199c5`](https://github.com/karmaniverous/stan-context/commit/2f199c5fd197b0ac1d2f0b233081d0540d28f738)
 - docs: complete selection helper contract [`8bbfe9f`](https://github.com/karmaniverous/stan-context/commit/8bbfe9f1a58438031fc9cccf3b54beb6544e9ed4)
+- chore: release v0.3.0 [`de87bfc`](https://github.com/karmaniverous/stan-context/commit/de87bfc3fed60d971a668f3e32f0d6e072f0d0e5)
 - fix: stabilize hashSizeEnforcement checks [`40d425b`](https://github.com/karmaniverous/stan-context/commit/40d425bc0ec3d91729c9fab8d8416472e7bc6685)
 - docs: record interop helper + size policy plan [`d5fab60`](https://github.com/karmaniverous/stan-context/commit/d5fab60a8ebfc1f44f6abb768780b4de6e8b742c)
 - fix: stabilize interop helper lint/tests [`11702c3`](https://github.com/karmaniverous/stan-context/commit/11702c34f143f066a38ccb723a9a778904a775c9)
