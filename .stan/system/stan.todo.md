@@ -105,3 +105,4 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 - Cleanup: remove patch-failure listing headers from docs.
 - Docs: document TypeScript load error propagation (cause).
 - Docs: clarify typescriptPath entry module + interop.
+- Docs: make typescriptPath CJS constraint explicit; record ESM option.

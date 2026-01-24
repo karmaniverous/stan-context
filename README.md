@@ -73,7 +73,9 @@ console.log(res.stats);
     - `typescriptPath` is treated as an **entry module file path** that exports the TypeScript compiler API (it is not treated as a package root).
     - A good default is `require.resolve('typescript')`, which typically resolves to a CommonJS file like `.../typescript/lib/typescript.js`.
     - VS Code’s TypeScript SDK entry (often `.../tsserverlibrary.js`) is also suitable as long as it exports the same TypeScript API surface.
-    - Interop: for module injection, stan-context normalizes `mod.default ?? mod` when validating the injected TypeScript module; for `typescriptPath`, the file is loaded via `require()`, so the path should point to a CommonJS entry module.
+    - Interop: for module injection, stan-context normalizes `mod.default ?? mod` when validating the injected TypeScript module; for `typescriptPath`, the file is loaded via `require()`, so the path MUST point to a CommonJS entry module.
+    - Constraint (current): ESM-only entry modules are not supported via `typescriptPath`. If your host only has an ESM entrypoint, inject `typescript` (module injection) instead.
+    - Future option (tracked): widen `typescriptPath` loading to support both CJS and ESM by attempting `import(pathToFileURL(...))` on `ERR_REQUIRE_ESM`, then normalizing `mod.default ?? mod`.
 - `previousGraph`
   - Pass the previously persisted graph to enable incremental analysis and edge reuse.
 - `nodeDescriptionLimit` (default: `160`)

@@ -25,7 +25,9 @@ This package does **not**:
   - If both `typescript` and `typescriptPath` are provided, `typescript` takes precedence.
   - `typescriptPath` MUST be an absolute filesystem path (for example from `require.resolve('typescript')` in the host environment).
   - `typescriptPath` MUST point to an entry module file that exports the TypeScript compiler API (not a package root). Common examples are `.../typescript/lib/typescript.js` and `.../tsserverlibrary.js` (VS Code SDK), as long as the module exports the same API surface.
-  - Interop: injected `typescript` modules are normalized as `mod.default ?? mod` for validation; `typescriptPath` is loaded via `require()`, so it should point to a CommonJS entry module.
+  - Interop: injected `typescript` modules are normalized as `mod.default ?? mod` for validation; `typescriptPath` is loaded via `require()`, so it MUST point to a CommonJS entry module.
+  - Constraint (current): ESM-only entry modules are not supported via `typescriptPath`. If your host only has an ESM entrypoint, inject `typescript` instead.
+  - Future option (tracked in requirements): widen `typescriptPath` loading to support both CJS and ESM via `import()` fallback on `ERR_REQUIRE_ESM`, with `mod.default ?? mod` normalization.
 
 ## Public API
 

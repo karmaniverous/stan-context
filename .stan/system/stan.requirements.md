@@ -272,6 +272,9 @@ Namespace forwarding semantics (important)
     - absolute entry-path injection (`GraphOptions.typescriptPath`).
   - stan-context MUST NOT attempt an implicit/ambient `require('typescript')` fallback.
   - If TypeScript cannot be loaded from injected inputs, `generateDependencyGraph` MUST throw an actionable error that includes underlying failure details.
+  - Current contract (implemented): `typescriptPath` is loaded via `require()` (using `createRequire(import.meta.url)`), so it MUST point to a CommonJS entry module file that exports the TypeScript compiler API.
+  - Future-proofing option (not yet implemented):
+    - stan-context SHOULD support ESM entry modules for `typescriptPath` by attempting `import(pathToFileURL(typescriptPath).href)` when `require()` fails with `ERR_REQUIRE_ESM` (or equivalent), then normalizing `mod.default ?? mod` before validation.
 - Hashing uses `node:crypto`.
 
 ## API contract (initial)
