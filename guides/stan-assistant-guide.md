@@ -1,3 +1,5 @@
+# guides/stan-assistant-guide.md
+
 # STAN assistant guide — stan-context
 
 This guide is a compact, self-contained usage contract for `@karmaniverous/stan-context` (“stan-context”). It is written so a STAN assistant (or human) can integrate the package correctly without consulting `.d.ts` files or other docs.
@@ -22,6 +24,8 @@ This package does **not**:
 - Packaging: ESM-only
 - TypeScript: **required** (`>= 5`)
   - The host MUST provide TypeScript explicitly via `GraphOptions.typescript` or `GraphOptions.typescriptPath` (otherwise `generateDependencyGraph` throws).
+  - If both `typescript` and `typescriptPath` are provided, `typescript` takes precedence.
+  - `typescriptPath` MUST be an absolute filesystem path (for example from `require.resolve('typescript')` in the host environment).
 
 ## Public API
 
@@ -69,6 +73,8 @@ Behavior:
 - Requires TypeScript for TS/JS analysis:
   - callers MUST provide `typescript` or `typescriptPath` or the call throws.
   - emits outgoing edges and performs barrel “tunneling” for named/default imports (implicit edges).
+  - TypeScript load failures are fatal (throw); they are not reported via `GraphResult.errors`.
+- `GraphResult.errors` is reserved for non-fatal warnings (for example, hash/size invariant warnings when `hashSizeEnforcement: 'warn'`).
 
 Incremental usage:
 
@@ -146,13 +152,9 @@ For accurate prompt budgeting:
 
 ## Selection summary helper (budgeting support)
 
-stan-context exports a pure helper to compute dependency selection closure
-membership and aggregate sizing (bytes) from an in-memory `DependencyGraph` plus
-dependency-state entries.
+stan-context exports a pure helper to compute dependency selection closure membership and aggregate sizing (bytes) from an in-memory `DependencyGraph` plus dependency-state entries.
 
-This is intended to help consumers (e.g., stan-core/stan-cli context mode)
-produce deterministic “selection reports” without reimplementing closure logic
-and without reading file bodies.
+This is intended to help consumers (e.g., stan-core/stan-cli context mode) produce deterministic “selection reports” without reimplementing closure logic and without reading file bodies.
 
 Import:
 
@@ -350,6 +352,8 @@ Recommended responsibilities for the engine layer:
 
 - Call `generateDependencyGraph({ cwd, config, previousGraph, ... })` during an archive/snapshot workflow.
   - Use the same `cwd` and selection config (`includes`/`excludes`/`anchors`) that you use for archiving so the graph aligns with the archived Universe.
+- Accept TypeScript injection from the host adapter (stan-cli / IDE extension / service) and pass it through to stan-context.
+  - Prefer module injection when possible.
 - Persist `previousGraph` in engine-owned state to enable incremental rebuilds.
   - Use `graph.nodes[id].metadata.hash` (sha256) to cache any derived metadata (especially token counts).
 - Store/embed the graph JSON in the archived context so the assistant can select files using the map.
@@ -367,9 +371,13 @@ Recommended responsibilities for the CLI layer:
 - Ensure TypeScript is provided explicitly to stan-context:
   - Prefer module injection (`typescript: ts`) when possible.
   - Otherwise pass `typescriptPath` (absolute path, for example from `require.resolve('typescript')` in the host environment).
+    - ESM host example:
+      - `const require = createRequire(import.meta.url);`
+      - `const typescriptPath = require.resolve('typescript');`
   - If TypeScript cannot be provided (or loading fails), `generateDependencyGraph` throws; surface that error to the user (the message is intended to be actionable).
 - Keep configuration single-source-of-truth:
-  - pass selection config (`includes`/`excludes`/`anchors`) through to the engine, and let the engine pass it to stan-context.
+  - pass selection config (`includes`/`excludes`/`anchors`) through to the engine, and let the engine pass it to stan-context.
+
 ## ESLint plugin (optional)
 
 stan-context publishes an ESLint plugin subpath export:
@@ -393,13 +401,9 @@ The rule shares the same “usable prose” semantics as `GraphNode.description`
 
 ### Test files are ignored by default (recommended config)
 
-`stanContext.configs.recommended` configures `stan-context/require-module-description`
-to ignore common test/test-like files by default (for example `*.test.*`,
-`*.spec.*`, and `test`/`tests`/`__tests__` directory patterns) across TS/JS-like
-extensions.
+`stanContext.configs.recommended` configures `stan-context/require-module-description` to ignore common test/test-like files by default (for example `*.test.*`, `*.spec.*`, and `test`/`tests`/`__tests__` directory patterns) across TS/JS-like extensions.
 
-This is intended to avoid noisy warnings in tests/fixtures where module-level
-documentation is not typically useful.
+This is intended to avoid noisy warnings in tests/fixtures where module-level documentation is not typically useful.
 
 ### Rule option: `ignorePatterns`
 
@@ -429,6 +433,7 @@ To enforce the rule in tests too, override with `ignorePatterns: []`.
 - Always persist and pass `previousGraph` if you want incremental behavior.
 - Always pass `typescript` or `typescriptPath`; there is no ambient TypeScript resolution.
 - Ensure `typescript` is installed in the host environment that injects it (for example, stan-cli).
+- If you supply `typescriptPath`, it must be absolute; prefer `createRequire(import.meta.url).resolve('typescript')` in ESM hosts.
 - Do not assume `node_modules/**` is in the Universe; it is implicitly excluded unless explicitly included (analysis may still discover external nodes via resolution).
 - If you want precise tunneling through barrels, avoid patterns that obscure the symbol-level dependency (especially namespace imports/exports). Prefer direct named re-exports and named imports to help stan-context produce the most actionable graph.
-- Do not treat `metadata.size` as token count; compute tokens in the consumer and cache by `metadata.hash`.
+- Do not treat `metadata.size` as token count; compute tokens in the consumer and cache by `metadata.hash`.

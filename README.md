@@ -32,6 +32,8 @@ Node: `>= 20`
 
 TypeScript: **required** for TS/JS analysis and must be provided explicitly by the host (see example below).
 
+If TypeScript is missing or cannot be loaded from the injected inputs, `generateDependencyGraph` throws (this is not surfaced via `errors`).
+
 ## Quick example
 
 ```ts
@@ -60,6 +62,8 @@ console.log(res.stats);
   - Provide either:
     - `typescript`: an already-loaded TypeScript module instance, or
     - `typescriptPath`: an absolute path to a TypeScript entry module (for example `require.resolve('typescript')` from the host environment).
+  - If both are provided, `typescript` takes precedence.
+  - `typescriptPath` must be an absolute filesystem path (ESM host example: `createRequire(import.meta.url).resolve('typescript')`).
 - `previousGraph`
   - Pass the previously persisted graph to enable incremental analysis and edge reuse.
 - `nodeDescriptionLimit` (default: `160`)
