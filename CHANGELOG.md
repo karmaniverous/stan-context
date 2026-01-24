@@ -2,10 +2,18 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [0.4.1](https://github.com/karmaniverous/stan-context/compare/0.4.0...0.4.1)
+
+- feat!: remove anchors from universe selection [`e94e1d8`](https://github.com/karmaniverous/stan-context/commit/e94e1d8c9140fc95bd036bcb5f43671b764e2b18)
+- feat!: remove anchors + clean doc artifacts [`a7adb04`](https://github.com/karmaniverous/stan-context/commit/a7adb0478d2c5343e1c96a57bde9938f3d8eca4f)
+
 #### [0.4.0](https://github.com/karmaniverous/stan-context/compare/0.3.0...0.4.0)
+
+> 24 January 2026
 
 - docs: clarify TS injection contract [`55d2d33`](https://github.com/karmaniverous/stan-context/commit/55d2d331be0b175e4fcb47f8964b5691a52a0b04)
 - feat: require injected TypeScript [`4dbc9ce`](https://github.com/karmaniverous/stan-context/commit/4dbc9ce94447a2b657a5f217e7388149499cecda)
+- chore: release v0.4.0 [`38014ca`](https://github.com/karmaniverous/stan-context/commit/38014cab30f11b1cfa6502632da7bd127efe16c1)
 - docs: align TS injection guidance [`cf4a4dc`](https://github.com/karmaniverous/stan-context/commit/cf4a4dc40b86c9e90666756e23c58120db707944)
 
 #### [0.3.0](https://github.com/karmaniverous/stan-context/compare/0.2.2...0.3.0)
