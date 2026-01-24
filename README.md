@@ -34,6 +34,11 @@ TypeScript: **required** for TS/JS analysis and must be provided explicitly by t
 
 If TypeScript is missing or cannot be loaded from the injected inputs, `generateDependencyGraph` throws (this is not surfaced via `errors`).
 
+Error propagation:
+
+- If `typescriptPath` is provided but loading fails, the thrown error message includes the underlying loader failure, and the original error is preserved as `error.cause` (Node >= 20).
+- If TypeScript is missing (no injection) or `typescript` is invalid, there is no underlying loader error to propagate.
+
 ## Quick example
 
 ```ts
@@ -63,6 +68,7 @@ console.log(res.stats);
     - `typescriptPath`: an absolute path to a TypeScript entry module (for example `require.resolve('typescript')` from the host environment).
   - If both are provided, `typescript` takes precedence.
   - `typescriptPath` must be an absolute filesystem path (ESM host example: `createRequire(import.meta.url).resolve('typescript')`).
+  - If loading from `typescriptPath` fails, the thrown error preserves the original loader error as `error.cause` (Node >= 20).
 - `previousGraph`
   - Pass the previously persisted graph to enable incremental analysis and edge reuse.
 - `nodeDescriptionLimit` (default: `160`)

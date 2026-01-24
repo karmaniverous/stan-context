@@ -103,3 +103,4 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 - Docs: mirror TS injection contract in README.
 - Breaking: remove anchors from selection config (includes/excludes only).
 - Cleanup: remove patch-failure listing headers from docs.
+- Docs: document TypeScript load error propagation (cause).

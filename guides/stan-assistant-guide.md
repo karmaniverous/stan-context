@@ -71,6 +71,9 @@ Behavior:
   - callers MUST provide `typescript` or `typescriptPath` or the call throws.
   - emits outgoing edges and performs barrel “tunneling” for named/default imports (implicit edges).
   - TypeScript load failures are fatal (throw); they are not reported via `GraphResult.errors`.
+  - Error propagation:
+    - if `typescriptPath` is provided but loading fails, the thrown error message includes the underlying loader failure, and the original error is preserved as `error.cause` (Node >= 20).
+    - if TypeScript is missing (no injection) or `typescript` is invalid, there is no underlying loader error to propagate.
 - `GraphResult.errors` is reserved for non-fatal warnings (for example, hash/size invariant warnings when `hashSizeEnforcement: 'warn'`).
 
 Incremental usage:
