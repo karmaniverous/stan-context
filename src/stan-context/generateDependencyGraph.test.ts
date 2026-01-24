@@ -1,3 +1,5 @@
+import { createRequire } from 'node:module';
+
 import ts from 'typescript';
 
 import { withTempDir, writeFile } from '../test/temp';
@@ -23,6 +25,19 @@ describe('generateDependencyGraph', () => {
       await expect(generateDependencyGraph({ cwd })).rejects.toThrow(
         /TypeScript is required: pass opts\.typescript or opts\.typescriptPath/i,
       );
+    });
+  });
+
+  test('accepts typescriptPath injection', async () => {
+    await withTempDir(async (cwd) => {
+      await writeFile(cwd, 'a.ts', `export const x = 1;\n`);
+
+      const require = createRequire(import.meta.url);
+      const typescriptPath = require.resolve('typescript');
+
+      const res = await generateDependencyGraph({ cwd, typescriptPath });
+      expect(res.graph.nodes['a.ts']).toBeTruthy();
+      expect(res.graph.edges['a.ts']).toEqual([]);
     });
   });
 

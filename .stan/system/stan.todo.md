@@ -98,3 +98,4 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 - Fix typed-lint false positives in selection helper.
 - Docs: fully specify selection helper contract.
 - Interop: drop nodes-only mode; require injected TypeScript.
+- Docs: align integration guidance with TS injection.

@@ -354,7 +354,7 @@ Recommended responsibilities for the engine layer:
   - Use `graph.nodes[id].metadata.hash` (sha256) to cache any derived metadata (especially token counts).
 - Store/embed the graph JSON in the archived context so the assistant can select files using the map.
   - A common pattern is writing a deterministic JSON file under the STAN workspace (for example under `<stanPath>/system/`), but the exact path is consumer-defined.
-- Treat `errors` as user-facing warnings (especially the “TypeScript missing” case).
+- Treat `errors` as user-facing warnings (non-fatal).
   - `maxErrors` exists to prevent runaway output volume on pathological repos.
 
 ### Integrating in stan-cli (CLI adapter)
@@ -364,11 +364,12 @@ Recommended responsibilities for the CLI layer:
 - Orchestrate the run loop (scripts -> outputs -> archives) by calling into stan-core.
 - Do not call stan-context directly from the CLI unless there is a compelling reason.
   - Preferred: stan-core owns the optional dependency and exposes a clean “graph generation” seam to the CLI.
-- Surface graph-generation issues as non-fatal warnings when possible:
-  - If TypeScript peer dependency is missing, stan-context returns a nodes-only graph and a warning in `errors`.
+- Ensure TypeScript is provided explicitly to stan-context:
+  - Prefer module injection (`typescript: ts`) when possible.
+  - Otherwise pass `typescriptPath` (absolute path, for example from `require.resolve('typescript')` in the host environment).
+  - If TypeScript cannot be provided (or loading fails), `generateDependencyGraph` throws; surface that error to the user (the message is intended to be actionable).
 - Keep configuration single-source-of-truth:
-  - pass selection config (`includes`/`excludes`/`anchors`) through to the engine, and let the engine pass it to stan-context.
-
+  - pass selection config (`includes`/`excludes`/`anchors`) through to the engine, and let the engine pass it to stan-context.
 ## ESLint plugin (optional)
 
 stan-context publishes an ESLint plugin subpath export:
@@ -426,7 +427,8 @@ To enforce the rule in tests too, override with `ignorePatterns: []`.
 ## Common integration pitfalls
 
 - Always persist and pass `previousGraph` if you want incremental behavior.
-- If you rely on TS analysis, ensure `typescript` is installed in the consuming environment (peer dependency).
+- Always pass `typescript` or `typescriptPath`; there is no ambient TypeScript resolution.
+- Ensure `typescript` is installed in the host environment that injects it (for example, stan-cli).
 - Do not assume `node_modules/**` is in the Universe; it is implicitly excluded unless explicitly included (analysis may still discover external nodes via resolution).
 - If you want precise tunneling through barrels, avoid patterns that obscure the symbol-level dependency (especially namespace imports/exports). Prefer direct named re-exports and named imports to help stan-context produce the most actionable graph.
 - Do not treat `metadata.size` as token count; compute tokens in the consumer and cache by `metadata.hash`.
