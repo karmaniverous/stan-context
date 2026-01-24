@@ -2,8 +2,8 @@
  * Requirements addressed:
  * - Public API: generateDependencyGraph(opts) =\> \{ graph, stats, errors \}.
  * - Universe scan defines source nodes (with size + sha256 hash).
- * - Graceful degradation when TypeScript peer dependency is missing:
- *   return a nodes-only graph with complete empty edges map.
+ * - TypeScript is required and MUST be provided explicitly by the host.
+ *   If TypeScript cannot be loaded from injected inputs, throw.
  * - Optional node descriptions for TS/JS nodes are derived from doc comments.
  * - Runtime option maxErrors caps output error volume deterministically.
  * - Configurable hash/size invariant enforcement:
@@ -20,7 +20,7 @@ import { makeHashedFileNode } from './core/nodes';
 import { scanUniverseFiles } from './core/universe';
 import { analyzeTypeScript } from './providers/ts/analyze';
 import * as tsDescribe from './providers/ts/describe';
-import { tryLoadTypeScript } from './providers/ts/load';
+import { loadTypeScript } from './providers/ts/load';
 import { loadCompilerOptions } from './providers/ts/tsconfig';
 import type {
   DependencyGraph,
@@ -89,6 +89,12 @@ export const generateDependencyGraph = async (
   const errors: string[] = [];
   const cwd = opts.cwd;
 
+  // Fail fast: TypeScript is required and must be provided by the host.
+  const ts = loadTypeScript({
+    typescript: opts.typescript,
+    typescriptPath: opts.typescriptPath,
+  });
+
   const nodeDescriptionLimit =
     typeof opts.nodeDescriptionLimit === 'number'
       ? opts.nodeDescriptionLimit
@@ -132,44 +138,6 @@ export const generateDependencyGraph = async (
   const edgesBase: Record<NodeId, GraphEdge[]> = {
     ...inc.reusedEdgesBySource,
   };
-
-  // Attempt to load TypeScript. If missing, return nodes-only graph.
-  const ts = tryLoadTypeScript();
-  if (!ts) {
-    errors.push(
-      'typescript peer dependency not found; returning nodes-only graph',
-    );
-
-    const describedNodes = await applyNodeDescriptions({
-      cwd,
-      nodes: baseNodes,
-      nodeDescriptionLimit,
-      describeSourceText: (a) =>
-        tsDescribe.describeTsJsModule({
-          ...a,
-          tags: nodeDescriptionTags,
-        }),
-    });
-
-    const graph: DependencyGraph = finalizeGraph({
-      nodes: describedNodes,
-      edges: edgesBase,
-    });
-
-    errors.push(
-      ...validateHashSizeInvariant({ graph, mode: hashSizeEnforcement }),
-    );
-
-    return {
-      graph,
-      stats: {
-        modules: Object.keys(graph.nodes).length,
-        edges: Object.values(graph.edges).reduce((n, es) => n + es.length, 0),
-        dirty: inc.dirtySourceIds.size,
-      },
-      errors: capErrors(errors, maxErrors),
-    };
-  }
 
   const compilerOptions = loadCompilerOptions({ ts, cwd });
 

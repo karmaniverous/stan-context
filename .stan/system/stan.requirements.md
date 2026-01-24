@@ -266,8 +266,12 @@ Namespace forwarding semantics (important)
 
 ## Dependencies and graceful degradation
 
-- `typescript` is a peer dependency.
-  - If it is missing at runtime, Universe scanning and hashing still run and the function returns a nodes-only graph (empty edge lists) plus an error/warning in `errors`.
+- TypeScript is required for TS/JS analysis and MUST be provided explicitly by the host.
+  - stan-context MUST support both:
+    - module injection (`GraphOptions.typescript`), and
+    - absolute entry-path injection (`GraphOptions.typescriptPath`).
+  - stan-context MUST NOT attempt an implicit/ambient `require('typescript')` fallback.
+  - If TypeScript cannot be loaded from injected inputs, `generateDependencyGraph` MUST throw an actionable error that includes underlying failure details.
 - Hashing uses `node:crypto`.
 
 ## API contract (initial)
@@ -275,6 +279,16 @@ Namespace forwarding semantics (important)
 ```ts
 export type GraphOptions = {
   cwd: string;
+  /**
+   * Injected TypeScript module instance to use for TS/JS analysis.
+   * Callers MUST provide either `typescript` or `typescriptPath`.
+   */
+  typescript?: typeof import('typescript');
+  /**
+   * Absolute path to a TypeScript entry module to load.
+   * (For example, `require.resolve('typescript')` from the host environment.)
+   */
+  typescriptPath?: string;
   config?: {
     includes?: string[];
     excludes?: string[];

@@ -1,3 +1,5 @@
+import ts from 'typescript';
+
 import { withTempDir, writeFile } from '../../../test/temp';
 
 const loadGenerateDependencyGraph = async () => {
@@ -52,7 +54,7 @@ describe('TypeScript provider (integration)', () => {
       );
 
       const generateDependencyGraph = await loadGenerateDependencyGraph();
-      const res = await generateDependencyGraph({ cwd });
+      const res = await generateDependencyGraph({ cwd, typescript: ts });
       const t = targets(res.graph, 'feature.ts');
 
       expect(t).toContain('explicit:type:models/index.ts');
@@ -77,7 +79,7 @@ describe('TypeScript provider (integration)', () => {
       );
 
       const generateDependencyGraph = await loadGenerateDependencyGraph();
-      const res = await generateDependencyGraph({ cwd });
+      const res = await generateDependencyGraph({ cwd, typescript: ts });
       const t = targets(res.graph, 'use.ts');
       expect(t).toContain('explicit:runtime:barrel.ts');
       expect(
@@ -107,7 +109,7 @@ describe('TypeScript provider (integration)', () => {
       );
 
       const generateDependencyGraph = await loadGenerateDependencyGraph();
-      const res = await generateDependencyGraph({ cwd });
+      const res = await generateDependencyGraph({ cwd, typescript: ts });
       const t = targets(res.graph, 'use.ts');
 
       expect(t).toContain('explicit:runtime:barrel.ts');
@@ -136,7 +138,7 @@ describe('TypeScript provider (integration)', () => {
       );
 
       const generateDependencyGraph = await loadGenerateDependencyGraph();
-      const res = await generateDependencyGraph({ cwd });
+      const res = await generateDependencyGraph({ cwd, typescript: ts });
       const t = targets(res.graph, 'use.ts');
 
       expect(t).toContain('explicit:runtime:barrel.ts');
@@ -165,7 +167,7 @@ describe('TypeScript provider (integration)', () => {
       );
 
       const generateDependencyGraph = await loadGenerateDependencyGraph();
-      const res = await generateDependencyGraph({ cwd });
+      const res = await generateDependencyGraph({ cwd, typescript: ts });
       const t = targets(res.graph, 'use.ts');
 
       expect(t).toContain('explicit:runtime:barrel.ts');
@@ -185,7 +187,7 @@ describe('TypeScript provider (integration)', () => {
       await writeFile(cwd, 'miss.ts', `import x from './nope';\nvoid x;\n`);
 
       const generateDependencyGraph = await loadGenerateDependencyGraph();
-      const res = await generateDependencyGraph({ cwd });
+      const res = await generateDependencyGraph({ cwd, typescript: ts });
 
       expect(
         Object.prototype.hasOwnProperty.call(res.graph.nodes, 'node:fs'),
@@ -263,7 +265,7 @@ describe('TypeScript provider (integration)', () => {
       );
 
       const generateDependencyGraph = await loadGenerateDependencyGraph();
-      const res = await generateDependencyGraph({ cwd });
+      const res = await generateDependencyGraph({ cwd, typescript: ts });
       const t = targets(res.graph, 'usepkg.ts');
 
       expect(t).toContain('explicit:runtime:node_modules/pkg/index.d.ts');

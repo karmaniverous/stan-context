@@ -30,15 +30,17 @@ pnpm add @karmaniverous/stan-context
 
 Node: `>= 20`
 
-TypeScript: provided as a **peer dependency** for the TS/JS provider.
+TypeScript: **required** for TS/JS analysis and must be provided explicitly by the host (see example below).
 
 ## Quick example
 
 ```ts
+import ts from 'typescript';
 import { generateDependencyGraph } from '@karmaniverous/stan-context';
 
 const res = await generateDependencyGraph({
   cwd: process.cwd(),
+  typescript: ts,
   config: {
     includes: [],
     excludes: ['dist/**'],
@@ -53,6 +55,11 @@ console.log(res.stats);
 
 ## Options (high level)
 
+- `typescript` / `typescriptPath` (required; host-provided)
+  - This package does not attempt to resolve TypeScript implicitly.
+  - Provide either:
+    - `typescript`: an already-loaded TypeScript module instance, or
+    - `typescriptPath`: an absolute path to a TypeScript entry module (for example `require.resolve('typescript')` from the host environment).
 - `previousGraph`
   - Pass the previously persisted graph to enable incremental analysis and edge reuse.
 - `nodeDescriptionLimit` (default: `160`)

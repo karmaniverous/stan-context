@@ -43,6 +43,21 @@ export type DependencyGraph = {
 
 export type GraphOptions = {
   cwd: string;
+  /**
+   * Injected TypeScript module instance to use for TS/JS analysis.
+   *
+   * This package does not attempt to resolve TypeScript implicitly. Callers MUST
+   * provide either `typescript` or `typescriptPath`.
+   */
+  typescript?: typeof import('typescript');
+  /**
+   * Absolute path to a TypeScript entry module to load (for example, the result
+   * of `require.resolve('typescript')` from the host environment).
+   *
+   * This is intended for hosts that want to control the TypeScript source
+   * deterministically (stan-cli, IDE SDK, web service, etc.).
+   */
+  typescriptPath?: string;
   config?: {
     includes?: string[];
     excludes?: string[];

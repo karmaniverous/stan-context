@@ -11,11 +11,9 @@ stan-core:
   imports:
     stan-cli:
       - ../stan-cli/.stan/interop/stan-context/**
-      - ../stan-cli/.stan/system/stan.requirements.md
       - ../stan-cli/guides/stan-assistant-guide.md
     stan-core:
       - ../stan-core/.stan/interop/stan-context/**
-      - ../stan-core/.stan/system/stan.requirements.md
       - ../stan-core/guides/stan-assistant-guide.md
 stan-cli:
   scripts:

@@ -18,11 +18,6 @@
   "peerDependencies": {
     "typescript": ">=5"
   },
-  "peerDependenciesMeta": {
-    "typescript": {
-      "optional": true
-    }
-  },
   "author": "Jason Williscroft",
   "auto-changelog": {
     "output": "CHANGELOG.md",

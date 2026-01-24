@@ -5,6 +5,9 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 ## Next up
 
 - Release readiness
+  - Interop: ensure the host (stan-cli / extension / service) injects TypeScript into stan-context calls:
+    - prefer `typescript` module injection when possible
+    - use `typescriptPath` when the host wants to control the TS source by absolute path
   - Expect new ESLint warnings until TS/JS modules add usable prose for the chosen tags.
   - Re-run `npm run lint` and confirm no ESLint errors (warnings expected).
   - Re-run the full suite (`lint`, `typecheck`, `test`, `build`, `docs`, `knip`) before publishing.
@@ -93,4 +96,5 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 - Fixed lint/test regressions for interop helpers.
 - Stabilized hashSizeEnforcement tests and helper lint.
 - Fix typed-lint false positives in selection helper.
-- Docs: fully specify selection helper contract.
+- Docs: fully specify selection helper contract.
+- Interop: drop nodes-only mode; require injected TypeScript.

@@ -20,8 +20,8 @@ This package does **not**:
 
 - Node: `>= 20`
 - Packaging: ESM-only
-- TypeScript: optional **peer dependency** (`>= 5`)
-  - If TypeScript is not installed, stan-context returns a nodes-only graph and includes a warning in `errors`.
+- TypeScript: **required** (`>= 5`)
+  - The host MUST provide TypeScript explicitly via `GraphOptions.typescript` or `GraphOptions.typescriptPath` (otherwise `generateDependencyGraph` throws).
 
 ## Public API
 
@@ -38,6 +38,8 @@ Contract-level signature:
 ```ts
 type GraphOptions = {
   cwd: string;
+  typescript?: typeof import('typescript');
+  typescriptPath?: string;
   config?: {
     includes?: string[];
     excludes?: string[];
@@ -64,11 +66,9 @@ declare function generateDependencyGraph(
 Behavior:
 
 - Always performs a Universe scan (gitignore + includes/excludes/anchors) and hashes discovered files.
-- If TypeScript is available:
-  - analyzes TS/JS module relationships and emits outgoing edges.
-  - performs barrel “tunneling” for named/default imports (implicit edges).
-- If TypeScript is missing:
-  - returns a nodes-only graph (no outgoing edges) and sets `errors` accordingly.
+- Requires TypeScript for TS/JS analysis:
+  - callers MUST provide `typescript` or `typescriptPath` or the call throws.
+  - emits outgoing edges and performs barrel “tunneling” for named/default imports (implicit edges).
 
 Incremental usage:
 
