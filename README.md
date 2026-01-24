@@ -46,7 +46,6 @@ const res = await generateDependencyGraph({
   config: {
     includes: [],
     excludes: ['dist/**'],
-    anchors: ['README.md'],
   },
   previousGraph: undefined,
 });

@@ -61,7 +61,6 @@ export type GraphOptions = {
   config?: {
     includes?: string[];
     excludes?: string[];
-    anchors?: string[];
   };
   previousGraph?: DependencyGraph;
   /**

@@ -1,5 +1,9 @@
 # guides/stan-assistant-guide.md
 
+# Post-patch full listing (anchors removed; includes/excludes only)
+
+# guides/stan-assistant-guide.md
+
 # STAN assistant guide — stan-context
 
 This guide is a compact, self-contained usage contract for `@karmaniverous/stan-context` (“stan-context”). It is written so a STAN assistant (or human) can integrate the package correctly without consulting `.d.ts` files or other docs.
@@ -47,7 +51,6 @@ type GraphOptions = {
   config?: {
     includes?: string[];
     excludes?: string[];
-    anchors?: string[];
   };
   previousGraph?: DependencyGraph;
   hashSizeEnforcement?: 'warn' | 'error' | 'ignore';
@@ -69,7 +72,7 @@ declare function generateDependencyGraph(
 
 Behavior:
 
-- Always performs a Universe scan (gitignore + includes/excludes/anchors) and hashes discovered files.
+- Always performs a Universe scan (gitignore + includes/excludes) and hashes discovered files.
 - Requires TypeScript for TS/JS analysis:
   - callers MUST provide `typescript` or `typescriptPath` or the call throws.
   - emits outgoing edges and performs barrel “tunneling” for named/default imports (implicit edges).
@@ -351,7 +354,7 @@ This section describes how to integrate stan-context without relying on any stan
 Recommended responsibilities for the engine layer:
 
 - Call `generateDependencyGraph({ cwd, config, previousGraph, ... })` during an archive/snapshot workflow.
-  - Use the same `cwd` and selection config (`includes`/`excludes`/`anchors`) that you use for archiving so the graph aligns with the archived Universe.
+  - Use the same `cwd` and selection config (`includes`/`excludes`) that you use for archiving so the graph aligns with the archived Universe.
 - Accept TypeScript injection from the host adapter (stan-cli / IDE extension / service) and pass it through to stan-context.
   - Prefer module injection when possible.
 - Persist `previousGraph` in engine-owned state to enable incremental rebuilds.
@@ -376,7 +379,7 @@ Recommended responsibilities for the CLI layer:
       - `const typescriptPath = require.resolve('typescript');`
   - If TypeScript cannot be provided (or loading fails), `generateDependencyGraph` throws; surface that error to the user (the message is intended to be actionable).
 - Keep configuration single-source-of-truth:
-  - pass selection config (`includes`/`excludes`/`anchors`) through to the engine, and let the engine pass it to stan-context.
+  - pass selection config (`includes`/`excludes`) through to the engine, and let the engine pass it to stan-context.
 
 ## ESLint plugin (optional)
 

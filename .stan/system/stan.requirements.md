@@ -1,3 +1,7 @@
+# .stan/system/stan.requirements.md
+
+# Post-patch full listing (anchors removed; includes/excludes only)
+
 # STAN — Requirements (stan-context)
 
 This document defines the durable requirements for `@karmaniverous/stan-context` (“stan-context”), the “Context Compiler” package.
@@ -160,14 +164,13 @@ Inputs:
 - `cwd` (repo root).
 - Config selection:
   - `includes?: string[]` (additive allow; can override `.gitignore`),
-  - `excludes?: string[]` (deny; highest precedence),
-  - `anchors?: string[]` (high-precedence allow; may override excludes and `.gitignore`).
+  - `excludes?: string[]` (deny; highest precedence).
 
 Base behavior:
 
 - Scan using `fast-glob` and POSIX-normalize all paths.
-- Respect `.gitignore` rules (unless re-included by `includes`/`anchors`).
-- Implicit exclusions (always applied unless explicitly re-included):
+- Respect `.gitignore` rules (unless re-included by `includes`).
+- Implicit exclusions (always applied unless explicitly re-included via `includes`):
   - `.git/**`
   - `node_modules/**`
 - `stan-context` is not required to hardcode `<stanPath>` reserved denials; `stan-core` supplies those via `config.excludes`.
@@ -194,7 +197,7 @@ Module resolution outcomes:
   - Create a `source` node with `size` and `hash` and include it in the graph.
 - External:
   - Resolve to the physical file path; create an `external` node with `size` and `hash`.
-  - If the resolved physical path is outside `cwd`, use absolute NodeId and set `isOutsideRoot: true`.
+  - If the resolved physical path is outside `cwd`, use absolute NodeId and set `metadata.isOutsideRoot: true`.
 - Missing/unresolved:
   - Create a `missing` node with `id` equal to the specifier and no metadata.
 
@@ -215,7 +218,7 @@ JSON imports:
 
 #### Re-export resolution strategy (robustness requirement)
 
-Re-export barrels are primarily a _syntactic forwarding graph_ (e.g., `export { X } from './x'`, `export type { X } from './x'`, `export * from './x'`). To avoid brittle behavior across TypeScript versions and `.d.ts` externals, the TS provider MUST implement tunneling through re-exports using an AST-first strategy:
+Re-export barrels are primarily a syntactic forwarding graph (e.g., `export { X } from './x'`, `export type { X } from './x'`, `export * from './x'`). To avoid brittle behavior across TypeScript versions and `.d.ts` externals, the TS provider MUST implement tunneling through re-exports using an AST-first strategy:
 
 - For named re-exports (`export { X } from './x'` and `export type { X } from './x'`):
   - Treat the `moduleSpecifier` and exported-name mapping as the primary source of truth.
@@ -242,7 +245,8 @@ Namespace forwarding semantics (important)
 - When the requested export name resolves to a namespace binding that was imported via `import * as Ns from '<m>'` and re-exported (with or without renaming):
   - The traversal MUST treat the target as the imported module `<m>` itself (module-level dependency), not as a symbol-level export name.
   - Tunneling MUST emit an implicit edge to the resolved module file for `<m>`.
-  - The provider MUST NOT attempt to expand namespace forwarding into declaration files via symbol lookup (there is no meaningful “exportName” to resolve on the target module for the namespace object).
+  - The provider MUST NOT attempt to expand namespace forwarding into declaration files via symbol lookup (there is no meaningful “exportName” to resolve on the target module for the namespace object).
+
 ### External dependencies (“Commander rule”)
 
 - Default external behavior is shallow:
@@ -292,7 +296,6 @@ export type GraphOptions = {
   config?: {
     includes?: string[];
     excludes?: string[];
-    anchors?: string[];
   };
   previousGraph?: DependencyGraph;
   hashSizeEnforcement?: 'warn' | 'error' | 'ignore';
@@ -340,7 +343,7 @@ export function generateDependencyGraph(
 - Rule contract: `stan-context/require-module-description`
   - Warns when a TS/JS module lacks usable module documentation prose.
   - Tag selection is tag-agnostic and strict:
-    - configured tags MUST be `@`-prefixed and match `/^@\\w+$/`
+    - configured tags MUST be `@`-prefixed and match `/^@\w+$/`
     - default tags are `@module` and `@packageDocumentation`
   - Semantics MUST match `GraphNode.description` extraction:
     - prose-only from a docblock containing a configured tag (tag text is not used)
@@ -416,4 +419,4 @@ Node handling:
   - Strict behavior (opt-in): treat violations as errors (fail the operation deterministically).
   - Ignore behavior (opt-in): do not warn or error on violations.
 - The stable runtime knob is `hashSizeEnforcement` with values:
-  - `'warn'` (default), `'error'`, `'ignore'`.
+  - `'warn'` (default), `'error'`, `'ignore'`.

@@ -2,7 +2,7 @@ import { withTempDir, writeFile } from '../../test/temp';
 import { scanUniverseFiles } from './universe';
 
 describe('scanUniverseFiles', () => {
-  test('respects .gitignore, includes, excludes, and anchors', async () => {
+  test('respects .gitignore, includes, and excludes', async () => {
     await withTempDir(async (cwd) => {
       await writeFile(
         cwd,
@@ -12,6 +12,7 @@ describe('scanUniverseFiles', () => {
       await writeFile(cwd, 'kept.txt', 'ok\n');
       await writeFile(cwd, 'ignored.txt', 'ignored\n');
       await writeFile(cwd, 'drop.txt', 'drop\n');
+      await writeFile(cwd, 'excluded.txt', 'excluded\n');
       await writeFile(cwd, 'node_modules/pkg/index.d.ts', 'export {};\n');
       await writeFile(cwd, '.git/config', 'nope\n');
 
@@ -19,19 +20,19 @@ describe('scanUniverseFiles', () => {
         cwd,
         config: {
           includes: ['ignored.txt', 'node_modules/pkg/**'],
-          excludes: ['drop.txt', 'ignored.txt'],
-          anchors: ['ignored.txt'],
+          excludes: ['drop.txt', 'excluded.txt'],
         },
       });
 
       // baseline kept
       expect(files).toContain('kept.txt');
 
-      // excluded beats include, but anchor rescues
+      // include overrides gitignore
       expect(files).toContain('ignored.txt');
 
       // excluded dropped
       expect(files).not.toContain('drop.txt');
+      expect(files).not.toContain('excluded.txt');
 
       // node_modules is implicitly excluded unless explicitly included/anchored
       expect(files).toContain('node_modules/pkg/index.d.ts');
