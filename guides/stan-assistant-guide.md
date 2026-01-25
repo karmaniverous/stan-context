@@ -197,6 +197,7 @@ Contract (v1):
   - `nodeId`
   - `[nodeId, depth]`
   - `[nodeId, depth, edgeKinds]`
+  - `[nodeId, depth, kindMask]` (compact; runtime=1, type=2, dynamic=4; 7 = all)
 - Traversal semantics:
   - outgoing edges only
   - depth-limited expansion:
@@ -206,6 +207,9 @@ Contract (v1):
     - valid kinds: `runtime` | `type` | `dynamic`
     - when omitted, `defaultEdgeKinds` is used
     - invalid kinds are ignored and produce deterministic warnings
+  - `kindMask` filtering (compact alternative to `edgeKinds`):
+    - runtime = `1`, type = `2`, dynamic = `4`, all = `7`
+    - invalid bits are ignored and produce deterministic warnings
 - Excludes win:
   - expand include closure `S`
   - expand exclude closure `X` using the same traversal semantics
@@ -441,3 +445,33 @@ To enforce the rule in tests too, override with `ignorePatterns: []`.
 - Do not assume `node_modules/**` is in the Universe; it is implicitly excluded unless explicitly included (analysis may still discover external nodes via resolution).
 - If you want precise tunneling through barrels, avoid patterns that obscure the symbol-level dependency (especially namespace imports/exports). Prefer direct named re-exports and named imports to help stan-context produce the most actionable graph.
 - Do not treat `metadata.size` as token count; compute tokens in the consumer and cache by `metadata.hash`.
+
+## Compact dependency context meta/state (host interop)
+
+Some STAN hosts implement “context mode” by writing an assistant-facing `dependency.meta.json` (map) and reading an assistant-authored `dependency.state.json` (directives). These files are host-owned; stan-context provides the underlying dependency graph and may provide helpers to support compact encoding.
+
+Stable decode tables (prompt-guaranteed for assistants in context mode):
+
+- Node kind index:
+  - `0` = source
+  - `1` = external
+  - `2` = builtin
+  - `3` = missing
+- Edge kind mask:
+  - runtime = `1`, type = `2`, dynamic = `4`, all = `7`
+- Edge resolution mask (meta only; optional):
+  - explicit = `1`, implicit = `2`, both = `3`
+  - if omitted: explicit-only
+
+State v2 entry compact form (host interop):
+
+- `string` (nodeId only)
+- `[nodeId, depth]`
+- `[nodeId, depth, kindMask]` where kindMask is the edge kind bitmask
+
+Meta v2 edge compact form (host interop):
+
+- edges are outgoing tuples:
+  - `[targetId, kindMask]`
+  - `[targetId, kindMask, resMask]`
+- hosts should merge multiple edges per target into one tuple by OR’ing masks.

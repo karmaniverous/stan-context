@@ -12,6 +12,8 @@
  * - Support configurable enforcement for the "metadata.hash implies metadata.size"
  *   invariant (warn default; strict throws; ignore silent).
  * - Deterministic output ordering for selectedNodeIds, largest, and warnings.
+ * - Accept a compact numeric bitmask encoding for edgeKinds in state entries:
+ *   `[nodeId, depth, kindMask]` where runtime=1, type=2, dynamic=4.
  */
 
 import type {
@@ -28,7 +30,7 @@ export type DependencyEdgeType = GraphEdgeKind;
 export type DependencyStateEntry =
   | string
   | [string, number]
-  | [string, number, DependencyEdgeType[]];
+  | [string, number, DependencyEdgeType[] | number];
 
 export type SummarizeDependencySelectionOptions = {
   defaultEdgeKinds?: DependencyEdgeType[];
@@ -56,6 +58,8 @@ const DEFAULT_DROP_NODE_KINDS: Array<'builtin' | 'missing'> = [
 const DEFAULT_MAX_TOP = 10;
 const DEFAULT_HASH_SIZE_ENFORCEMENT: HashSizeEnforcement = 'warn';
 
+// Compact state encoding: runtime=1, type=2, dynamic=4.
+const EDGE_KIND_MASK_ALL = 1 | 2 | 4;
 const hasOwn = (rec: object, key: string): boolean =>
   Object.prototype.hasOwnProperty.call(rec, key);
 const getOwn = <T>(rec: Record<string, T>, key: string): T | undefined =>
@@ -76,6 +80,39 @@ const normalizeEdgeKinds = (args: {
   entryLabel: string;
 }): DependencyEdgeType[] => {
   if (args.raw === undefined) return args.fallback;
+
+  if (typeof args.raw === 'number' && Number.isFinite(args.raw)) {
+    const raw = Math.floor(args.raw);
+    if (raw < 0) {
+      args.warnings.add(
+        `Invalid edgeKinds bitmask for ${args.entryLabel}: expected integer >= 0; using none.`,
+      );
+      return [];
+    }
+
+    const masked = raw & EDGE_KIND_MASK_ALL;
+    const invalid = raw & ~EDGE_KIND_MASK_ALL;
+    if (invalid !== 0) {
+      args.warnings.add(
+        `Invalid edgeKinds bit(s) for ${args.entryLabel}: ${String(
+          invalid,
+        )}; ignoring.`,
+      );
+    }
+
+    const out: DependencyEdgeType[] = [];
+    if ((masked & 1) !== 0) out.push('runtime');
+    if ((masked & 2) !== 0) out.push('type');
+    if ((masked & 4) !== 0) out.push('dynamic');
+
+    if (raw > 0 && out.length === 0) {
+      args.warnings.add(
+        `No valid edgeKinds for ${args.entryLabel}; no edges will be traversed.`,
+      );
+    }
+
+    return out;
+  }
 
   if (!Array.isArray(args.raw)) {
     args.warnings.add(

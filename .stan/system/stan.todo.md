@@ -4,13 +4,15 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 
 ## Next up
 
-- Release readiness
-  - Interop: ensure the host (stan-cli / extension / service) injects TypeScript into stan-context calls:
-    - prefer `typescript` module injection when possible
-    - use `typescriptPath` when the host wants to control the TS source by absolute path
-  - Expect new ESLint warnings until TS/JS modules add usable prose for the chosen tags.
-  - Re-run `npm run lint` and confirm no ESLint errors (warnings expected).
-  - Re-run the full suite (`lint`, `typecheck`, `test`, `build`, `docs`, `knip`) before publishing.
+- Dependency context compaction (interop)
+  - Provide a compact, assistant-friendly encoding for `dependency.meta.json` and `dependency.state.json` (v2), including stable decode tables.
+  - Add a stan-context helper to encode a `DependencyGraph` into compact meta form (edge merging, masks, minified output).
+  - Extend selection helper to accept compact bitmask `edgeKinds` in state entries.
+  - Document interop for stan-core and stan-cli via `.stan/interop/**` notes.
+  - After downstream adoption, validate end-to-end:
+    - staging verification still rejects mismatches deterministically
+    - closure traversal semantics remain identical to pre-v2 behavior
+    - archive.meta.tar contains the compact state and meta as expected
 
 ## Design snapshot (keep in sync while implementing)
 
@@ -106,3 +108,4 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 - Docs: document TypeScript load error propagation (cause).
 - Docs: clarify typescriptPath entry module + interop.
 - Docs: make typescriptPath CJS constraint explicit; record ESM option.
+- Interop: add compact dependency meta/state v2 encoding + docs.

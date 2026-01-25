@@ -133,6 +133,7 @@ Contract (summary):
   - `nodeId`
   - `[nodeId, depth]`
   - `[nodeId, depth, edgeKinds]`
+  - `[nodeId, depth, kindMask]` (compact; runtime=1, type=2, dynamic=4)
 - Traversal:
   - outgoing edges only
   - depth-limited expansion:
@@ -193,6 +194,41 @@ export default [
   },
 ];
 ```
+
+## Compact dependency meta encoding (context mode interop)
+
+Hosts that implement STAN “context mode” often need a compact, assistant-facing
+`dependency.meta.json` that:
+
+- preserves NodeId path strings for reasoning,
+- embeds outgoing edges in each node (no separate edges map),
+- merges multiple edges per target into a single tuple using bitmasks.
+
+This package exports a helper to encode the standard `DependencyGraph` into a
+compact meta form suitable for writing to `.stan/context/dependency.meta.json`:
+
+```ts
+import { encodeDependencyMeta, generateDependencyGraph } from '@karmaniverous/stan-context';
+
+const res = await generateDependencyGraph({ cwd, typescript: ts });
+const meta = encodeDependencyMeta({ graph: res.graph });
+
+// write meta as minified JSON in the host
+```
+
+Compact meta notes (v2):
+
+- `meta.v === 2`
+- nodes are keyed by NodeId under `meta.n`
+- `node.k` is a numeric kind index (source/external/builtin/missing)
+- edges are tuples under `node.e`:
+  - `[targetId, kindMask]` (explicit-only)
+  - `[targetId, kindMask, resMask]` (explicit/implicit/both)
+- hashes are encoded as 128-bit base64url (no padding) derived from the
+  SHA-256 hex hashes produced by the context compiler.
+
+This helper is pure (no FS) and does not manage `.stan/` state; the host is
+responsible for persistence, staging, and archiving workflows.
 
 ## License
 

@@ -19,6 +19,11 @@ export type GraphNodeMetadata = {
   isOutsideRoot?: true;
 };
 
+/**
+ * Note:
+ * - `GraphNodeMetadata.hash` is the canonical SHA-256 hex digest for the graph.
+ * - Context-mode hosts may choose to store a shorter derived hash in separate meta files.
+ */
 export type GraphNode = {
   id: NodeId;
   kind: GraphNodeKind;

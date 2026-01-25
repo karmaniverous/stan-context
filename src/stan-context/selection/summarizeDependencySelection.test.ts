@@ -68,6 +68,18 @@ describe('summarizeDependencySelection', () => {
     expect(res.largest[0]).toEqual({ nodeId: 'a.ts', bytes: 100 });
   });
 
+  test('accepts numeric edgeKinds bitmask in entries', () => {
+    const graph = makeGraph();
+    const res = summarizeDependencySelection({
+      graph,
+      // runtime-only mask = 1
+      include: [['a.ts', 2, 1]],
+    });
+
+    // a -> b -> c via runtime edges; dynamic edge to d is excluded.
+    expect(res.selectedNodeIds).toEqual(['a.ts', 'b.ts', 'c.ts']);
+  });
+
   test('excludes subtract after expansion (excludes win)', () => {
     const graph = makeGraph();
     const res = summarizeDependencySelection({

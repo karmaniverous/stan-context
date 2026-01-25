@@ -374,7 +374,7 @@ stan-core/stan-cli implement context-mode budgeting and need deterministic summa
   - Inputs:
     - `graph`: `DependencyGraph` (as returned by `generateDependencyGraph`)
     - `include` / `exclude`: entries in the STAN dependency-state tuple forms:
-      - `string | [nodeId, depth] | [nodeId, depth, edgeKinds[]]`
+      - `string | [nodeId, depth] | [nodeId, depth, edgeKinds[]] | [nodeId, depth, kindMask]`
     - `options`:
       - `defaultEdgeKinds` (default: `['runtime','type','dynamic']`)
       - `dropNodeKinds` (default: drop `builtin` and `missing` from the returned selection)
@@ -395,6 +395,9 @@ Selection semantics (must match dependency state closure rules):
 - `edgeKinds` filtering:
   - When omitted in an entry, use `options.defaultEdgeKinds`.
   - Only `runtime`, `type`, and `dynamic` are valid kinds; invalid kinds MUST be ignored and warned deterministically.
+- `kindMask` filtering (compact alternative):
+  - runtime = `1`, type = `2`, dynamic = `4`, all = `7`
+  - invalid bits MUST be ignored and warned deterministically.
 - Excludes win:
   - Expand `include` to a closure set `S`.
   - Expand `exclude` to a closure set `X` using the same traversal semantics.
@@ -419,3 +422,110 @@ Node handling:
   - Ignore behavior (opt-in): do not warn or error on violations.
 - The stable runtime knob is `hashSizeEnforcement` with values:
   - `'warn'` (default), `'error'`, `'ignore'`.
+
+## Interop: dependency context meta/state (compact v2)
+
+STAN “context mode” uses two assistant-facing artifacts under `<stanPath>/context/`:
+
+- `dependency.meta.json` — the dependency “Map” (graph + node metadata)
+- `dependency.state.json` — assistant-authored “Directives” (selection intent)
+
+These artifacts MUST be compact enough to live in an LLM context window while preserving precise reasoning signal.
+
+### Constraints
+
+- Both `dependency.meta.json` and `dependency.state.json` MUST be minified by default (no pretty whitespace).
+- Node IDs MUST remain rich string paths/specifiers for reasoning (do not index NodeIds away by default).
+- `dependency.meta.json` MUST remain usable for integrity-sensitive staging verification by the host.
+
+### Stable decode tables (prompt-guaranteed)
+
+Node kind index (`meta.n[nodeId].k`):
+
+- `0` = `source`
+- `1` = `external`
+- `2` = `builtin`
+- `3` = `missing`
+
+Edge kind mask bits (used in both meta and state):
+
+- `1` (`0b001`) = `runtime`
+- `2` (`0b010`) = `type`
+- `4` (`0b100`) = `dynamic`
+- `7` (`0b111`) = “all kinds”
+
+Edge resolution mask bits (meta only; optional third tuple element):
+
+- `1` (`0b01`) = `explicit`
+- `2` (`0b10`) = `implicit`
+- `3` (`0b11`) = both
+
+If `resMask` is omitted in meta edge tuples, resolution defaults to explicit-only (`1`).
+
+### dependency.meta.json (v2) schema
+
+```ts
+type DependencyMetaV2 = {
+  v: 2;
+  n: Record<
+    string,
+    {
+      // node kind index (stable decode table)
+      k: 0 | 1 | 2 | 3;
+      // file size (bytes); present for file nodes when applicable
+      s?: number;
+      // 128-bit base64url (no padding); present for file nodes when applicable
+      h?: string;
+      // optional one-line description (TS/JS)
+      d?: string;
+      // outgoing edges as compact tuples
+      e?: Array<[string, number] | [string, number, number]>;
+    }
+  >;
+};
+```
+
+Edge tuples (`node.e`) are either:
+
+- `[targetId, kindMask]` (implicit resMask = explicit-only), or
+- `[targetId, kindMask, resMask]`
+
+Edge merging requirement:
+
+- For any given source node and target node, `dependency.meta.json` MUST contain at most one edge tuple.
+- If multiple edges exist in the underlying graph between the same pair, merge:
+  - `kindMask` = bitwise-OR across edge kinds
+  - `resMask` = bitwise-OR across resolutions
+
+Omit `resMask` when explicit-only:
+
+- If merged `resMask` is `1`, use the 2-tuple form `[targetId, kindMask]`.
+
+Hash representation for meta (`node.h`):
+
+- Meta’s `h` is derived from the canonical graph SHA-256 hex hash:
+  - take the first 16 bytes of the SHA-256 digest (128-bit prefix)
+  - encode as base64url without padding
+- Hosts SHOULD also verify `s` (size in bytes) as a second factor.
+
+### dependency.state.json (v2) schema
+
+```ts
+type DependencyStateEntryV2 =
+  | string
+  | [string, number]
+  | [string, number, number]; // nodeId, depth, kindMask
+
+type DependencyStateFileV2 = {
+  v: 2;
+  i: DependencyStateEntryV2[]; // include
+  x?: DependencyStateEntryV2[]; // exclude (excludes win)
+};
+```
+
+State semantics:
+
+- `string` implies `[nodeId, 0, 7]`
+- `[nodeId, depth]` implies kindMask `7`
+- `[nodeId, depth, kindMask]` filters traversal by edge kind mask
+- Excludes win: expand both sides then subtract (`S \ X`)

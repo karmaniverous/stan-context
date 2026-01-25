@@ -1,4 +1,5 @@
 export { generateDependencyGraph } from './stan-context/generateDependencyGraph';
+export { type DependencyMeta, encodeDependencyMeta } from './stan-context/meta';
 export type {
   DependencyEdgeType,
   DependencySelectionSummary,
