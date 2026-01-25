@@ -115,4 +115,4 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 - Docs: export meta v2 types to satisfy TypeDoc.
 - Docs: export meta v2 constants to satisfy TypeDoc.
 - Interop: respond to stan-core v2 helper note.
-- Interop: replace v2 notes (meta no hashes; engine map).
+- Interop: replace v2 notes (meta no hashes; engine map).- Cleanup: drop meta hash field + helper (v2 contract).

@@ -3,10 +3,7 @@
  * Compact dependency meta (context-mode) exports.
  */
 
-export {
-  encodeDependencyMeta,
-  sha256HexToBase64Url128,
-} from './encodeDependencyMeta';
+export { encodeDependencyMeta } from './encodeDependencyMeta';
 export type {
   DependencyMeta,
   DependencyMetaEdge,

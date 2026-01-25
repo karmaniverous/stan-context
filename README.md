@@ -231,8 +231,7 @@ Hash note:
   content hashes to reduce context size.
 - Hosts that need integrity-sensitive staging verification should maintain a
   separate host-private mapping (for example `dependency.map.json`) containing
-  canonical nodeId → source locator + size + full sha256.
-
+  canonical nodeId → source locator + size + full sha256.
 This helper is pure (no FS) and does not manage `.stan/` state; the host is
 responsible for persistence, staging, and archiving workflows.
 ## License

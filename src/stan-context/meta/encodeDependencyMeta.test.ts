@@ -1,10 +1,7 @@
 import { describe, expect, test } from 'vitest';
 
 import type { DependencyGraph } from '../types';
-import {
-  encodeDependencyMeta,
-  sha256HexToBase64Url128,
-} from './encodeDependencyMeta';
+import { encodeDependencyMeta } from './encodeDependencyMeta';
 
 const H = 'a'.repeat(64); // valid hex
 
@@ -43,20 +40,6 @@ const makeGraph = (): DependencyGraph => ({
     'c.ts': [],
     'node:fs': [],
   },
-});
-
-describe('sha256HexToBase64Url128', () => {
-  test('converts sha256 hex to 128-bit base64url without padding', () => {
-    const out = sha256HexToBase64Url128(H);
-    expect(out).toMatch(/^[A-Za-z0-9_-]+$/);
-    expect(out.includes('=')).toBe(false);
-    // 16 bytes -> 22 base64url chars (unpadded)
-    expect(out.length).toBe(22);
-  });
-
-  test('throws on invalid input', () => {
-    expect(() => sha256HexToBase64Url128('hx')).toThrow(/Invalid SHA-256 hex/i);
-  });
 });
 
 describe('encodeDependencyMeta', () => {

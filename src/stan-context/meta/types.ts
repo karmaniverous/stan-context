@@ -7,7 +7,7 @@
  *   - preserves NodeId strings for reasoning,
  *   - stores edges as tuples (one per source-target pair),
  *   - uses bitmasks for edge kind/resolution,
- *   - supports 128-bit base64url hashes for integrity-sensitive staging checks.
+ *   - omits content hashes (integrity lives in engine-owned host-private maps).
  */
 
 import type { NodeId } from '../types';
@@ -57,8 +57,6 @@ export type DependencyMetaNode = {
   k: DependencyMetaNodeKind;
   /** File size (bytes). Typically present for source/external nodes. */
   s?: number;
-  /** 128-bit base64url hash (no padding). Typically present for source/external. */
-  h?: string;
   /** Optional one-line description (TS/JS only). */
   d?: string;
   /** Outgoing edges, compact tuples. */
