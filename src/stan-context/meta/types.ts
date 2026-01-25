@@ -49,8 +49,8 @@ export const EDGE_RES_BOTH = EDGE_RES_MASK.explicit | EDGE_RES_MASK.implicit;
  * - [targetId, kindMask, resMask] =\> explicit/implicit/both
  */
 export type DependencyMetaEdge =
-  | [target: NodeId, kindMask: number]
-  | [target: NodeId, kindMask: number, resMask: number];
+  | readonly [target: NodeId, kindMask: number]
+  | readonly [target: NodeId, kindMask: number, resMask: number];
 
 export type DependencyMetaNode = {
   /** Node kind index (stable decode table). */

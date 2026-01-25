@@ -34,9 +34,7 @@ const SHA256_HEX_RE = /^[0-9a-f]{64}$/i;
 
 export const sha256HexToBase64Url128 = (hex: string): string => {
   if (!SHA256_HEX_RE.test(hex)) {
-    throw new Error(
-      `Invalid SHA-256 hex hash (expected 64 hex chars): ${String(hex)}`,
-    );
+    throw new Error(`Invalid SHA-256 hex hash (expected 64 hex chars): ${hex}`);
   }
   const bytes = Buffer.from(hex, 'hex'); // 32 bytes
   const short = bytes.subarray(0, 16); // 128-bit prefix
