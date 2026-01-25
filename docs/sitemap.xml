@@ -2,126 +2,126 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 	<url>
 		<loc>https://docs.karmanivero.us/stan-context/index.html</loc>
-		<lastmod>2026-01-25T02:48:45.776Z</lastmod>
+		<lastmod>2026-01-25T09:56:29.642Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/stan-context/modules.html</loc>
-		<lastmod>2026-01-25T02:48:45.776Z</lastmod>
+		<lastmod>2026-01-25T09:56:29.642Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/stan-context/hierarchy.html</loc>
-		<lastmod>2026-01-25T02:48:45.776Z</lastmod>
+		<lastmod>2026-01-25T09:56:29.642Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/stan-context/documents/README.html</loc>
-		<lastmod>2026-01-25T02:48:45.776Z</lastmod>
+		<lastmod>2026-01-25T09:56:29.642Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/stan-context/modules/index.html</loc>
-		<lastmod>2026-01-25T02:48:45.776Z</lastmod>
+		<lastmod>2026-01-25T09:56:29.642Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/stan-context/types/index.DependencyEdgeType.html</loc>
-		<lastmod>2026-01-25T02:48:45.776Z</lastmod>
+		<lastmod>2026-01-25T09:56:29.642Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/stan-context/types/index.DependencyGraph.html</loc>
-		<lastmod>2026-01-25T02:48:45.776Z</lastmod>
+		<lastmod>2026-01-25T09:56:29.642Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/stan-context/types/index.DependencyMeta.html</loc>
-		<lastmod>2026-01-25T02:48:45.776Z</lastmod>
+		<lastmod>2026-01-25T09:56:29.642Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/stan-context/types/index.DependencyMetaEdge.html</loc>
-		<lastmod>2026-01-25T02:48:45.776Z</lastmod>
+		<lastmod>2026-01-25T09:56:29.642Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/stan-context/types/index.DependencyMetaNode.html</loc>
-		<lastmod>2026-01-25T02:48:45.776Z</lastmod>
+		<lastmod>2026-01-25T09:56:29.642Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/stan-context/types/index.DependencyMetaNodeKind.html</loc>
-		<lastmod>2026-01-25T02:48:45.776Z</lastmod>
+		<lastmod>2026-01-25T09:56:29.642Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/stan-context/types/index.DependencyMetaSchemaVersion.html</loc>
-		<lastmod>2026-01-25T02:48:45.776Z</lastmod>
+		<lastmod>2026-01-25T09:56:29.642Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/stan-context/types/index.DependencySelectionSummary.html</loc>
-		<lastmod>2026-01-25T02:48:45.776Z</lastmod>
+		<lastmod>2026-01-25T09:56:29.642Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/stan-context/types/index.DependencyStateEntry.html</loc>
-		<lastmod>2026-01-25T02:48:45.776Z</lastmod>
+		<lastmod>2026-01-25T09:56:29.642Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/stan-context/types/index.GraphEdge.html</loc>
-		<lastmod>2026-01-25T02:48:45.776Z</lastmod>
+		<lastmod>2026-01-25T09:56:29.642Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/stan-context/types/index.GraphEdgeKind.html</loc>
-		<lastmod>2026-01-25T02:48:45.776Z</lastmod>
+		<lastmod>2026-01-25T09:56:29.642Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/stan-context/types/index.GraphEdgeResolution.html</loc>
-		<lastmod>2026-01-25T02:48:45.776Z</lastmod>
+		<lastmod>2026-01-25T09:56:29.642Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/stan-context/types/index.GraphLanguage.html</loc>
-		<lastmod>2026-01-25T02:48:45.776Z</lastmod>
+		<lastmod>2026-01-25T09:56:29.642Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/stan-context/types/index.GraphNode.html</loc>
-		<lastmod>2026-01-25T02:48:45.776Z</lastmod>
+		<lastmod>2026-01-25T09:56:29.642Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/stan-context/types/index.GraphNodeKind.html</loc>
-		<lastmod>2026-01-25T02:48:45.776Z</lastmod>
+		<lastmod>2026-01-25T09:56:29.642Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/stan-context/types/index.GraphNodeMetadata.html</loc>
-		<lastmod>2026-01-25T02:48:45.776Z</lastmod>
+		<lastmod>2026-01-25T09:56:29.642Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/stan-context/types/index.GraphOptions.html</loc>
-		<lastmod>2026-01-25T02:48:45.776Z</lastmod>
+		<lastmod>2026-01-25T09:56:29.642Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/stan-context/types/index.GraphResult.html</loc>
-		<lastmod>2026-01-25T02:48:45.776Z</lastmod>
+		<lastmod>2026-01-25T09:56:29.642Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/stan-context/types/index.HashSizeEnforcement.html</loc>
-		<lastmod>2026-01-25T02:48:45.776Z</lastmod>
+		<lastmod>2026-01-25T09:56:29.642Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/stan-context/types/index.NodeId.html</loc>
-		<lastmod>2026-01-25T02:48:45.776Z</lastmod>
+		<lastmod>2026-01-25T09:56:29.642Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/stan-context/types/index.SummarizeDependencySelectionOptions.html</loc>
-		<lastmod>2026-01-25T02:48:45.776Z</lastmod>
+		<lastmod>2026-01-25T09:56:29.642Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/stan-context/variables/index.DEPENDENCY_META_SCHEMA_VERSION.html</loc>
-		<lastmod>2026-01-25T02:48:45.776Z</lastmod>
+		<lastmod>2026-01-25T09:56:29.642Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/stan-context/variables/index.NODE_KIND.html</loc>
-		<lastmod>2026-01-25T02:48:45.776Z</lastmod>
+		<lastmod>2026-01-25T09:56:29.642Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/stan-context/functions/index.encodeDependencyMeta.html</loc>
-		<lastmod>2026-01-25T02:48:45.776Z</lastmod>
+		<lastmod>2026-01-25T09:56:29.642Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/stan-context/functions/index.generateDependencyGraph.html</loc>
-		<lastmod>2026-01-25T02:48:45.776Z</lastmod>
+		<lastmod>2026-01-25T09:56:29.642Z</lastmod>
 	</url>
 	<url>
 		<loc>https://docs.karmanivero.us/stan-context/functions/index.summarizeDependencySelection.html</loc>
-		<lastmod>2026-01-25T02:48:45.776Z</lastmod>
+		<lastmod>2026-01-25T09:56:29.642Z</lastmod>
 	</url>
 </urlset>

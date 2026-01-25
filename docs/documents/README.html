@@ -206,11 +206,17 @@ compact meta form suitable for writing to <code>.stan/context/dependency.meta.js
 <li><code>[targetId, kindMask, resMask]</code> (explicit/implicit/both)</li>
 </ul>
 </li>
-<li>hashes are encoded as 128-bit base64url (no padding) derived from the
-SHA-256 hex hashes produced by the context compiler.</li>
 </ul>
-<p>This helper is pure (no FS) and does not manage <code>.stan/</code> state; the host is
-responsible for persistence, staging, and archiving workflows.</p>
+<p>Hash note:</p>
+<ul>
+<li>The assistant-facing compact meta produced by <code>encodeDependencyMeta</code> omits
+content hashes to reduce context size.</li>
+<li>Hosts that need integrity-sensitive staging verification should maintain a
+separate host-private mapping (for example <code>dependency.map.json</code>) containing
+canonical nodeId → source locator + size + full sha256.
+This helper is pure (no FS) and does not manage <code>.stan/</code> state; the host is
+responsible for persistence, staging, and archiving workflows.</li>
+</ul>
 <h2 id="license" class="tsd-anchor-link">License<a href="#license" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2>
 <p>BSD-3-Clause</p>
 <hr>

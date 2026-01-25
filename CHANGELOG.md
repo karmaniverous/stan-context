@@ -2,9 +2,18 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [0.6.0](https://github.com/karmaniverous/stan-context/compare/0.5.0...0.6.0)
+
+- docs: rework v2 interop with engine-owned map [`6b4dbb0`](https://github.com/karmaniverous/stan-context/commit/6b4dbb058c0fd6e13298973d8ac04904e700e769)
+- docs: add stan-core interop response for v2 [`addc120`](https://github.com/karmaniverous/stan-context/commit/addc120ce476295598601d76b80e18b0eb1267fc)
+- chore: drop meta hash field and hash helper [`9630c13`](https://github.com/karmaniverous/stan-context/commit/9630c13387b68e0fffb4e2e3acc716d7277d2241)
+
 #### [0.5.0](https://github.com/karmaniverous/stan-context/compare/0.4.1...0.5.0)
 
+> 25 January 2026
+
 - feat: add compact dependency meta/state v2 interop [`4b64cdf`](https://github.com/karmaniverous/stan-context/commit/4b64cdfb59ce728d5e2e2613c4be9e8a109b80ad)
+- chore: release v0.5.0 [`75c500b`](https://github.com/karmaniverous/stan-context/commit/75c500b360c34750d99c3282828e56f3108686d9)
 - docs: export meta types to satisfy typedoc [`93bc2ad`](https://github.com/karmaniverous/stan-context/commit/93bc2adeefc3c1e268534613c684064014d36854)
 - docs: clarify typescriptPath CJS constraint [`988bce2`](https://github.com/karmaniverous/stan-context/commit/988bce21b2a72f340b27ae21fe9cfd94f65b97d0)
 - fix: resolve v2 meta encoder typecheck/lint [`28b5e53`](https://github.com/karmaniverous/stan-context/commit/28b5e53a5e4818436e62963371c1328a5c474d59)
