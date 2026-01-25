@@ -11,6 +11,8 @@ export type {
   DependencyMeta,
   DependencyMetaEdge,
   DependencyMetaNode,
+  DependencyMetaNodeKind,
+  DependencyMetaSchemaVersion,
 } from './types';
 export {
   DEPENDENCY_META_SCHEMA_VERSION,

@@ -108,4 +108,6 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 - Docs: document TypeScript load error propagation (cause).
 - Docs: clarify typescriptPath entry module + interop.
 - Docs: make typescriptPath CJS constraint explicit; record ESM option.
-- Interop: add compact dependency meta/state v2 encoding + docs.- Fix v2 meta encoder typecheck/lint regressions.
+- Interop: add compact dependency meta/state v2 encoding + docs.
+- Fix v2 meta encoder typecheck/lint regressions.
+- Docs: export meta v2 types to satisfy TypeDoc.
