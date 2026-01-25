@@ -1,11 +1,13 @@
 export { generateDependencyGraph } from './stan-context/generateDependencyGraph';
 export {
+  DEPENDENCY_META_SCHEMA_VERSION,
   type DependencyMeta,
   type DependencyMetaEdge,
   type DependencyMetaNode,
   type DependencyMetaNodeKind,
   type DependencyMetaSchemaVersion,
   encodeDependencyMeta,
+  NODE_KIND,
 } from './stan-context/meta';
 export type {
   DependencyEdgeType,
