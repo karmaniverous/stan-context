@@ -66,7 +66,6 @@ describe('encodeDependencyMeta', () => {
     expect(meta.v).toBe(2);
     expect(meta.n['a.ts'].k).toBe(0); // source
     expect(meta.n['a.ts'].s).toBe(100);
-    expect(meta.n['a.ts'].h).toBe(sha256HexToBase64Url128(H));
     expect(meta.n['a.ts'].d).toBe('A node');
 
     // One edge per target:

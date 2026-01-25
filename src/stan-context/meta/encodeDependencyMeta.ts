@@ -9,8 +9,7 @@
  *   - keep NodeId strings as keys and edge targets (no node indexing by default).
  * - De-duplicate edges:
  *   - one edge per (source,target) pair via bitmask merging.
- * - Hash encoding for meta:
- *   - convert SHA-256 hex hashes to a 128-bit (16-byte) base64url prefix.
+ * - Omit hashes from assistant-facing meta (integrity lives in host-private maps).
  */
 
 import type {
@@ -101,12 +100,6 @@ export const encodeDependencyMeta = (args: {
 
     const size = n.metadata?.size;
     if (typeof size === 'number' && Number.isFinite(size)) out.s = size;
-
-    const hash = n.metadata?.hash;
-    if (typeof hash === 'string' && hash) {
-      // For v2 meta, we store 128-bit base64url. Convert from expected sha256 hex.
-      out.h = sha256HexToBase64Url128(hash);
-    }
 
     const desc = n.description;
     if (typeof desc === 'string' && desc.trim()) out.d = desc.trim();

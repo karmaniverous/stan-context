@@ -6,9 +6,11 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 
 - Dependency context compaction (interop)
   - Provide a compact, assistant-friendly encoding for `dependency.meta.json` and `dependency.state.json` (v2), including stable decode tables.
-  - Add a stan-context helper to encode a `DependencyGraph` into compact meta form (edge merging, masks, minified output).
+  - Add a stan-context helper to encode a `DependencyGraph` into compact assistant meta (edge merging, masks, minified output; omit hashes).
   - Extend selection helper to accept compact bitmask `edgeKinds` in state entries.
-  - Document interop for stan-core and stan-cli via `.stan/interop/**` notes.
+  - Document interop for stan-core and stan-cli via `.stan/interop/**` notes:
+    - assistant meta omits hashes
+    - engine-owned `dependency.map.json` carries locatorAbs + size + full sha256 for staging verification
   - After downstream adoption, validate end-to-end:
     - staging verification still rejects mismatches deterministically
     - closure traversal semantics remain identical to pre-v2 behavior
@@ -113,3 +115,4 @@ This document tracks the near-term implementation plan for `@karmaniverous/stan-
 - Docs: export meta v2 types to satisfy TypeDoc.
 - Docs: export meta v2 constants to satisfy TypeDoc.
 - Interop: respond to stan-core v2 helper note.
+- Interop: replace v2 notes (meta no hashes; engine map).

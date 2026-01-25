@@ -224,12 +224,17 @@ Compact meta notes (v2):
 - edges are tuples under `node.e`:
   - `[targetId, kindMask]` (explicit-only)
   - `[targetId, kindMask, resMask]` (explicit/implicit/both)
-- hashes are encoded as 128-bit base64url (no padding) derived from the
-  SHA-256 hex hashes produced by the context compiler.
+
+Hash note:
+
+- The assistant-facing compact meta produced by `encodeDependencyMeta` omits
+  content hashes to reduce context size.
+- Hosts that need integrity-sensitive staging verification should maintain a
+  separate host-private mapping (for example `dependency.map.json`) containing
+  canonical nodeId → source locator + size + full sha256.
 
 This helper is pure (no FS) and does not manage `.stan/` state; the host is
-responsible for persistence, staging, and archiving workflows.
-
+responsible for persistence, staging, and archiving workflows.
 ## License
 
 BSD-3-Clause
