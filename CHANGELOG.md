@@ -2,9 +2,22 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [0.5.0](https://github.com/karmaniverous/stan-context/compare/0.4.1...0.5.0)
+
+- feat: add compact dependency meta/state v2 interop [`4b64cdf`](https://github.com/karmaniverous/stan-context/commit/4b64cdfb59ce728d5e2e2613c4be9e8a109b80ad)
+- docs: export meta types to satisfy typedoc [`93bc2ad`](https://github.com/karmaniverous/stan-context/commit/93bc2adeefc3c1e268534613c684064014d36854)
+- docs: clarify typescriptPath CJS constraint [`988bce2`](https://github.com/karmaniverous/stan-context/commit/988bce21b2a72f340b27ae21fe9cfd94f65b97d0)
+- fix: resolve v2 meta encoder typecheck/lint [`28b5e53`](https://github.com/karmaniverous/stan-context/commit/28b5e53a5e4818436e62963371c1328a5c474d59)
+- docs: document TS load error propagation [`a42885a`](https://github.com/karmaniverous/stan-context/commit/a42885a69792adc0f80265425735912ccc0a1a67)
+- docs: clarify typescriptPath entry semantics [`ef0e057`](https://github.com/karmaniverous/stan-context/commit/ef0e05784a3c05f34f65550deeaaf762c2c0ef9b)
+- docs: export meta constants for typedoc [`3240627`](https://github.com/karmaniverous/stan-context/commit/3240627eb6dd1706e5b5102d644d1a72cd7b456f)
+
 #### [0.4.1](https://github.com/karmaniverous/stan-context/compare/0.4.0...0.4.1)
 
+> 24 January 2026
+
 - feat!: remove anchors from universe selection [`e94e1d8`](https://github.com/karmaniverous/stan-context/commit/e94e1d8c9140fc95bd036bcb5f43671b764e2b18)
+- chore: release v0.4.1 [`3da264b`](https://github.com/karmaniverous/stan-context/commit/3da264bcd332b411d13d5bcbccd6f520de0b01a3)
 - feat!: remove anchors + clean doc artifacts [`a7adb04`](https://github.com/karmaniverous/stan-context/commit/a7adb0478d2c5343e1c96a57bde9938f3d8eca4f)
 
 #### [0.4.0](https://github.com/karmaniverous/stan-context/compare/0.3.0...0.4.0)
